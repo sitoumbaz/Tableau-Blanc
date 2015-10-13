@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-package Gui;
-=======
-package whiteboard.src.gui;
->>>>>>> f4180e22aa71db9881ba7bc75dcf042d441b9072
 
+package Gui;
 import javax.swing.SwingUtilities;
 
 /**

@@ -1,8 +1,5 @@
-<<<<<<< HEAD
+
 package Gui;
-=======
-package gui;
->>>>>>> f4180e22aa71db9881ba7bc75dcf042d441b9072
 
 import java.util.EventListener;
 
