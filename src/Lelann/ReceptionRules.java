@@ -13,6 +13,7 @@ public class ReceptionRules extends Thread {
     public ReceptionRules( LelannMutualExclusion a ) {
 	
 	algo = a;
+	
     }
     
     public void run() {
