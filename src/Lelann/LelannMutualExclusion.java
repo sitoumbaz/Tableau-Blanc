@@ -19,6 +19,8 @@ public class LelannMutualExclusion extends Algorithm {
     
     // Router
     MyRouter myRouter;
+    
+    Router allRoute;
 
     // Token 
     boolean token = false;
@@ -54,6 +56,8 @@ public class LelannMutualExclusion extends Algorithm {
 	// Init routeMap
 	myRouter = new MyRouter(getNetSize());
 	
+	allRoute = new Router(getNetSize());
+	
 	
 	setRouteMap();
 	System.out.println("#### Route processus "+getId()+" ######");
@@ -64,6 +68,9 @@ public class LelannMutualExclusion extends Algorithm {
 			System.out.println("porte "+myRouter.getDoorOnMyRoute(i)+"  connecte au prcessus "+i);
 		}
 	}
+	
+	try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
+	
 	
 	rr = new ReceptionRules( this );
 	rr.start();
@@ -134,11 +141,40 @@ public class LelannMutualExclusion extends Algorithm {
     		RouteMessage mr = recoitRoute(d);
     		myRouter.setDoorToMyRoute(mr.procId, d.getNum());
     		i++;
-    	}
-    	
+    	}	
     	
     }
     
+    // Rule 1 : Where is
+    synchronized void whereIs(){
+    	
+    	for(int procId=0; procId< this.getNetSize(); procId++){
+    		
+    		
+    		for(int i=0; i< getArity(); i++){
+        		
+        		WhereIsMessage mr = new WhereIsMessage(MsgType.WHEREIS, getId(), procId );
+        		boolean send = sendTo(i,mr);
+        	}
+        	
+        	Door d = new Door();
+        	int door = -1;
+        	WhereIsMessage mr = recoitWhereIs(d);
+        	if(mr.getListProc().size() > 0){
+        		
+        		for(int i= 0; i<mr.getListProc().size(); i++){
+        			
+        			if(allRoute.getgetMyRoute(getId(), procId) == -1){
+        				
+                		allRoute.setMyRoute(getId(), mr.getProcId(i) , d.getNum());
+                	}
+        			
+        		}
+        		
+        	}
+    	}
+    	
+    } 
     
     // Rule 1 : ask for critical section
     synchronized void askForCritical() {
@@ -190,6 +226,12 @@ public class LelannMutualExclusion extends Algorithm {
     public RouteMessage recoitRoute ( Door d ) {
 
     	RouteMessage rm = (RouteMessage)receive( d );
+    	return rm;
+    }
+    
+    public WhereIsMessage recoitWhereIs( Door d ) {
+
+    	WhereIsMessage rm = (WhereIsMessage)receive( d );
     	return rm;
     }
 

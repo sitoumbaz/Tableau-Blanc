@@ -30,6 +30,11 @@ public class Router {
 		allRoute[proc1][proc2] = door;
 	}
 	
+	public int getgetMyRoute(int proc1, int proc2){
+		
+		return allRoute[proc1][proc2];
+	}
+	
 	public int[][] getMyRoute(){
 		
 		return allRoute;
