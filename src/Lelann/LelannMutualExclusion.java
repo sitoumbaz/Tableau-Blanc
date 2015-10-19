@@ -60,14 +60,7 @@ public class LelannMutualExclusion extends Algorithm {
 	
 	
 	setRouteMap();
-	System.out.println("#### Route processus "+getId()+" ######");
-	for(int i=0; i< getNetSize(); i++){
-			
-		if(myRouter.getDoorOnMyRoute(i) > -1){
-			
-			System.out.println("porte "+myRouter.getDoorOnMyRoute(i)+"  connecte au prcessus "+i);
-		}
-	}
+	
 	
 	try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
 	
@@ -180,7 +173,6 @@ public class LelannMutualExclusion extends Algorithm {
     synchronized void askForCritical() {
 
 	while( !token ) { 
-
 	    displayState();
 	    try { this.wait(); } catch( InterruptedException ie) {}
 	}
@@ -241,11 +233,20 @@ public class LelannMutualExclusion extends Algorithm {
 	String state = new String("\n");
 	state = state + "--------------------------------------\n";
 	if ( inCritical ) 
-	    state = state + "** ACCESS CRITICAL **";
+	    state = state + "** ACCESS CRITICAL **\n";
 	else if ( waitForCritical )
-	    state = state + "* WAIT FOR *";
+	    state = state + "* WAIT FOR *\n";
 	else
-	    state = state + "-- SLEEPING --";
+	    state = state + "-- SLEEPING --\n";
+	
+	state = state + "#### Route processus "+getId()+" ######\n";
+	for(int i=0; i< getNetSize(); i++){
+			
+		if(myRouter.getDoorOnMyRoute(i) > -1){
+			
+			state = state +"porte "+myRouter.getDoorOnMyRoute(i)+" connectee au proc "+i +"\n";
+		}
+	}
 
 	df.display( state );
     }
