@@ -11,9 +11,9 @@ public class Router {
 		this.netSize = netSize;
 	}
 	
-	public void setMyRoute(int index, int elt[]){
+	public void setMyRoute(int proc1, int proc2,  int door){
 		
-		allRoute[index] = elt;
+		allRoute[proc1][proc2] = door;
 	}
 	
 	public int[][] getMyRoute(){
@@ -21,7 +21,7 @@ public class Router {
 		return allRoute;
 	}
 	
-	public int[] generateRoute(int index ){
+	/*public int[] generateRoute(int index ){
 		
 		solveHamiltonian(this.allRoute, index, 0);
 		return null;
@@ -47,5 +47,5 @@ public class Router {
 			}
 		}
 		return false;
-	} 
+	} */
 }
