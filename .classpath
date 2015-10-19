@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/opt/ViSiDiA/lib/visidia-build_1.0.zip"/>
-	<classpathentry kind="lib" path="/opt/ViSiDiA/lib/visidia_api.jar"/>
+	<classpathentry kind="lib" path="/home/tombi/workspace-AD/Tableau-Blanc/lib/visidia_api.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

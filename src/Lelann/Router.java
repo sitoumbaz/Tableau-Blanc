@@ -9,6 +9,20 @@ public class Router {
 		
 		allRoute = new int[netSize][netSize];
 		this.netSize = netSize;
+		initTab();
+	}
+	
+	private void initTab(){
+		for(int i=0;i<netSize;i++){
+			for(int j=0;j<netSize;j++){
+				if(i!=j){
+					allRoute[i][j] = -1;
+				}else{
+					allRoute[i][j] = -2;
+				}
+				
+			}
+		}
 	}
 	
 	public void setMyRoute(int index, int elt[]){

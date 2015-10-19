@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+
 package Gui;
-=======
-package whiteboard.src.gui;
->>>>>>> f4180e22aa71db9881ba7bc75dcf042d441b9072
+
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -20,14 +18,14 @@ public class FormePixel extends Forme {
 	 * @param fg
 	 *            L'avant plan.
 	 * @param trait
-	 *            L'épaisseur du trait.
+	 *            L'��paisseur du trait.
 	 */
 	public FormePixel(Color bg, Color fg, float trait) {
 		super(bg, fg, trait);
 	}
 	
 	/**
-	 * Méthode de dessin de l'arriere plan.
+	 * M��thode de dessin de l'arriere plan.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
@@ -36,7 +34,7 @@ public class FormePixel extends Forme {
 	}
 	
 	/**
-	 * Méthode de dessin de l'avant plan.
+	 * M��thode de dessin de l'avant plan.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
@@ -50,10 +48,10 @@ public class FormePixel extends Forme {
 	}
 	
 	/**
-	 * Retourne vrai si cette forme est définit par 2 points, faux pour un
+	 * Retourne vrai si cette forme est d��finit par 2 points, faux pour un
 	 * point.
 	 * 
-	 * @return vrai si cette forme est définit par 2 points, faux pour un point.
+	 * @return vrai si cette forme est d��finit par 2 points, faux pour un point.
 	 */
 	public boolean aDeuxPoints() {
 		return false;
