@@ -14,14 +14,16 @@ public class LelannMutualExclusion extends Algorithm {
     // All nodes data
     int procId;
     int next = 0;
+    private static int step = 2;
     // Higher speed means lower simulation speed
     int speed = 4;
     
     // Router
     MyRouter myRouter;
     
-    Router allRoute;
-
+    //Test if the route map is complete
+  	boolean myRouterIsComplete = true;
+  	
     // Token 
     boolean token = false;
 
@@ -56,69 +58,75 @@ public class LelannMutualExclusion extends Algorithm {
 	// Init routeMap
 	myRouter = new MyRouter(getNetSize());
 	
-	allRoute = new Router(getNetSize());
-	
-	
 	setRouteMap();
-	
 	
 	try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
 	
+	if(!myRouterIsComplete){
+		
+		myRouterIsComplete = true;
+		extendRouteMap();
 	
-	rr = new ReceptionRules( this );
-	rr.start();
-
+	}
 	
 	// Display initial state + give time to place frames
 	df = new DisplayFrame( procId );
 	displayState();
 	try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
 
-	// Start token round
-	if ( procId == 0 ) {
-	    token = false;
-	    TokenMessage tm = new TokenMessage(MsgType.TOKEN);
-	    boolean sent = sendTo( next, tm );
+			
+	if(myRouterIsComplete){
+		
+		rr = new ReceptionRules( this );
+		rr.start();
+
+		// Start token round
+		if ( procId == 0 ) {
+		    token = false;
+		    TokenMessage tm = new TokenMessage(MsgType.TOKEN);
+		    boolean sent = sendTo( next, tm );
+		}
+
+		while( true ) {
+		    
+			    // Wait for some time
+			    int time = ( 3 + rand.nextInt(10)) * speed * 1000;
+			    System.out.println("Process " + procId + " wait for " + time);
+			    try {
+				Thread.sleep( time );
+			    } catch( InterruptedException ie ) {}
+			    
+			    // Try to access critical section
+			    waitForCritical = true;
+			    askForCritical();
+	
+			    // Access critical
+			    waitForCritical = false;
+			    inCritical = true;
+	
+			    displayState();
+	
+			    // Simulate critical resource use
+			    time = (1 + rand.nextInt(3)) * 1000;
+			    System.out.println("Process " + procId + " enter SC " + time);
+			    try {
+				Thread.sleep( time );
+			    } catch( InterruptedException ie ) {}
+			    System.out.println("Process " + procId + " exit SC ");
+	
+			    // Release critical use
+			    inCritical = false;
+			    endCriticalUse();
+			}
+	    }
 	}
-
-	while( true ) {
-	    
-	    // Wait for some time
-	    int time = ( 3 + rand.nextInt(10)) * speed * 1000;
-	    System.out.println("Process " + procId + " wait for " + time);
-	    try {
-		Thread.sleep( time );
-	    } catch( InterruptedException ie ) {}
-	    
-	    // Try to access critical section
-	    waitForCritical = true;
-	    askForCritical();
-
-	    // Access critical
-	    waitForCritical = false;
-	    inCritical = true;
-
-	    displayState();
-
-	    // Simulate critical resource use
-	    time = (1 + rand.nextInt(3)) * 1000;
-	    System.out.println("Process " + procId + " enter SC " + time);
-	    try {
-		Thread.sleep( time );
-	    } catch( InterruptedException ie ) {}
-	    System.out.println("Process " + procId + " exit SC ");
-
-	    // Release critical use
-	    inCritical = false;
-	    endCriticalUse();
-	}
-    }
+	
 
     //--------------------
     // Rules
     //-------------------
 
-    // Rule 0 : set route map
+    // Rule 0 : tell to all my neighbor where I am
     synchronized void setRouteMap() {
 
     	for(int i=0; i< getArity(); i++){
@@ -134,42 +142,76 @@ public class LelannMutualExclusion extends Algorithm {
     		RouteMessage mr = recoitRoute(d);
     		myRouter.setDoorToMyRoute(mr.procId, d.getNum());
     		i++;
-    	}	
+    	}
+    	setMyRouterIsComplete();
     	
     }
     
-    // Rule 1 : Where is
-    synchronized void whereIs(){
+    // Rule 1 : Ask to neighbor if they know other processus
+    synchronized void extendRouteMap(){
     	
     	for(int procId=0; procId< this.getNetSize(); procId++){
     		
+    		if(myRouter.getDoorOnMyRoute(procId) == -1){
+    			
+    			WhereOrHere_IsMessage mr = new WhereOrHere_IsMessage(MsgType.WHEREIS, getId(), procId,0 );
+    			sendWhereIsOrHereIs(mr, -1);
+    			
+            	Door d = new Door();
+            	int door = -1;
+            	mr = recoitHereOrWhere(d);
+            	if(mr.type == MsgType.WHEREIS){
+            		
+            		mr = (WhereOrHere_IsMessage)receive( d );
+            		if(mr.myProcId != getId()){// While I'm not the initiator of this message, I accept it
+            			
+            			if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) != -1){// If ProcIdToFind is connected to one of my doors
+                			
+                			mr.addProcId(mr.ProcIdToFind);
+                			mr.type = MsgType.HEREIS;
+                			mr.step = 0;
+                			sendTo(d.getNum(), mr);
+                			
+                		}else{
+                			
+                			mr.step++;
+                			sendWhereIsOrHereIs(mr, d.getNum());
+                		}  
+                		
+            		}
+            		
+            	}else if(mr.type == MsgType.HEREIS){
+            		
+            		
+            		myRouter.setDoorToMyRoute(mr.ProcIdToFind, d.getNum());
+            		if(mr.myProcId != getId()){
+            			
+            			mr.step++;
+            		    door = myRouter.getDoorOnMyRoute(mr.myProcId);
+            		    if(door != -1){
+            		    	
+            		    	sendTo(door,mr);
+            		    	
+            		    }else{
+            		    	
+            		    	sendWhereIsOrHereIs(mr, d.getNum());
+            		    }
+            			
+            		}
+            		
+            	}else{
+            		
+            		
+            	}
+        		
+    		}
     		
-    		for(int i=0; i< getArity(); i++){
-        		
-        		WhereIsMessage mr = new WhereIsMessage(MsgType.WHEREIS, getId(), procId );
-        		boolean send = sendTo(i,mr);
-        	}
-        	
-        	Door d = new Door();
-        	int door = -1;
-        	WhereIsMessage mr = recoitWhereIs(d);
-        	if(mr.getListProc().size() > 0){
-        		
-        		for(int i= 0; i<mr.getListProc().size(); i++){
-        			
-        			if(allRoute.getgetMyRoute(getId(), procId) == -1){
-        				
-                		allRoute.setMyRoute(getId(), mr.getProcId(i) , d.getNum());
-                	}
-        			
-        		}
-        		
-        	}
     	}
+    	setMyRouterIsComplete();
     	
     } 
     
-    // Rule 1 : ask for critical section
+    // Rule 2 : ask for critical section
     synchronized void askForCritical() {
 
 	while( !token ) { 
@@ -178,7 +220,7 @@ public class LelannMutualExclusion extends Algorithm {
 	}
     }
 
-    // Rule 2 : receive TOKEN
+    // Rule 3 : receive TOKEN
     synchronized void receiveTOKEN(int d){
 
 	System.out.println("Process " + procId + " reveiced TOKEN from " + d );
@@ -197,7 +239,7 @@ public class LelannMutualExclusion extends Algorithm {
 	}
     }
 
-    // Rule 3 :
+    // Rule 4 :
     void endCriticalUse() {
 
 	token = false;
@@ -206,12 +248,24 @@ public class LelannMutualExclusion extends Algorithm {
 
 	displayState();
     }
-
+    
+    // Send message Where Is
+    public void sendWhereIsOrHereIs(WhereOrHere_IsMessage mr, int exceptDoor){
+    
+		for(int i=0; i< getArity(); i++){
+    		
+			if(exceptDoor != i){
+    			
+        		boolean send = sendTo(i,mr);
+    		}
+    		
+    	}
+    }
     // Access to receive function
     public TokenMessage recoit ( Door d ) {
 
-	TokenMessage sm = (TokenMessage)receive( d );
-	return sm;
+		TokenMessage sm = (TokenMessage)receive( d );
+		return sm;
     }
     
  // Access to receive function
@@ -221,12 +275,26 @@ public class LelannMutualExclusion extends Algorithm {
     	return rm;
     }
     
-    public WhereIsMessage recoitWhereIs( Door d ) {
+    
+ // Access to receive function
+    public WhereOrHere_IsMessage recoitHereOrWhere ( Door d ) {
 
-    	WhereIsMessage rm = (WhereIsMessage)receive( d );
+    	WhereOrHere_IsMessage rm = (WhereOrHere_IsMessage)receive( d );
     	return rm;
     }
-
+    
+    // Test if the route map is complete
+    public void setMyRouterIsComplete(){
+    	
+    	for(int i = 0; i < getNetSize(); i++){
+    		
+    		if(myRouter.getDoorOnMyRoute(i) == -1){
+    			
+    			myRouterIsComplete = false;
+    		}
+    	}
+    	
+    } 
     // Display state
     void displayState() {
 

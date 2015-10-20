@@ -7,18 +7,20 @@ import java.util.Queue;
 
 import visidia.simulation.process.messages.Message;
 
-public class WhereIsMessage extends Message {
+public class WhereOrHere_IsMessage extends Message {
     
     MsgType type;
     int myProcId;
-    int hisProcId;
+    int ProcIdToFind;
+    int step;
     ArrayList<Integer> listProc = new ArrayList<Integer>();
     
-    public WhereIsMessage(MsgType t, int id1, int id2) {
+    public WhereOrHere_IsMessage(MsgType t, int id1, int id2, int s) {
     	
 		type = t;
 		myProcId = id1;
-		hisProcId = id2;
+		ProcIdToFind = id2;
+		step = s;
 	
     }
 
@@ -41,13 +43,13 @@ public class WhereIsMessage extends Message {
     
     @Override
     public Message clone() {
-    	return new WhereIsMessage(MsgType.WHEREIS, myProcId,hisProcId);
+    	return new WhereOrHere_IsMessage(MsgType.WHEREIS, myProcId,ProcIdToFind,step);
     }
     
     @Override 
     public String toString() {
 
-		String r = "ROUTE("+myProcId+","+hisProcId+")";
+		String r = "WhereOrHereIs("+myProcId+","+ProcIdToFind+","+step+")";
 		return r;
     }
     
