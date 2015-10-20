@@ -12,11 +12,15 @@ import visidia.simulation.process.messages.Door;
 public class LelannMutualExclusion extends Algorithm {
     
     // All nodes data
-    int procId;
-    int next = 0;
+    private int procId;
+    private int next = 0;
     private static int step = 2;
+    
     // Higher speed means lower simulation speed
-    int speed = 4;
+    private int speed = 4;
+    
+    // Request to give response
+    private int counter = 0;
     
     // Router
     MyRouter myRouter;
@@ -69,60 +73,32 @@ public class LelannMutualExclusion extends Algorithm {
 		extendRouteMap();
 	
 	}
-	
-	// Display initial state + give time to place frames
-	df = new DisplayFrame( procId );
-	displayState();
-	try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
-
-			
+		
 	if(myRouterIsComplete){
 		
-		rr = new ReceptionRules( this );
-		rr.start();
-
-		// Start token round
-		if ( procId == 0 ) {
-		    token = false;
-		    TokenMessage tm = new TokenMessage(MsgType.TOKEN);
-		    boolean sent = sendTo( next, tm );
-		}
-
-		while( true ) {
-		    
-			    // Wait for some time
-			    int time = ( 3 + rand.nextInt(10)) * speed * 1000;
-			    System.out.println("Process " + procId + " wait for " + time);
-			    try {
-				Thread.sleep( time );
-			    } catch( InterruptedException ie ) {}
-			    
-			    // Try to access critical section
-			    waitForCritical = true;
-			    askForCritical();
-	
-			    // Access critical
-			    waitForCritical = false;
-			    inCritical = true;
-	
-			    displayState();
-	
-			    // Simulate critical resource use
-			    time = (1 + rand.nextInt(3)) * 1000;
-			    System.out.println("Process " + procId + " enter SC " + time);
-			    try {
-				Thread.sleep( time );
-			    } catch( InterruptedException ie ) {}
-			    System.out.println("Process " + procId + " exit SC ");
-	
-			    // Release critical use
-			    inCritical = false;
-			    endCriticalUse();
+		df = new DisplayFrame( procId );
+		displayState();
+		try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
+		while(true){
+			
+			Door d = new Door();
+			WhereOrHere_IsMessage mr = recoitHereOrWhere(d);
+			if(mr.type == MsgType.WHEREIS){
+				
+				if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){
+					
+					mr.addProcId(mr.ProcIdToFind);
+					mr.type = MsgType.HEREIS;
+					mr.step = 0;
+					sendTo(d.getNum(), mr);
+				}
 			}
-	    }
+			
+		}
+		
 	}
 	
-
+    }
     //--------------------
     // Rules
     //-------------------
@@ -163,8 +139,9 @@ public class LelannMutualExclusion extends Algorithm {
             	mr = recoitHereOrWhere(d);
             	if(mr.type == MsgType.WHEREIS){
             		
-       
+            		
             		if(mr.myProcId != getId()){// While I'm not the initiator of this message, I accept it
+            			
             			
             			if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){// If ProcIdToFind is connected to one of my doors
                 			
@@ -194,6 +171,7 @@ public class LelannMutualExclusion extends Algorithm {
             			
             			mr.step++;
             		    door = myRouter.getDoorOnMyRoute(mr.myProcId);
+            		   
             		    if(door > -1){
             		    	
             		    	sendTo(door,mr);
@@ -310,6 +288,11 @@ public class LelannMutualExclusion extends Algorithm {
     			myRouterIsComplete = false;
     		}
     	}
+    	if(counter != 0){
+    		
+    		myRouterIsComplete = false;
+    	}
+    	
     	
     } 
     // Display state
