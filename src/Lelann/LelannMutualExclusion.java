@@ -57,12 +57,13 @@ public class LelannMutualExclusion extends Algorithm {
 	
 	// Init routeMap
 	myRouter = new MyRouter(getNetSize());
+	myRouter.setDoorToMyRoute(getId(), -2);
 	
 	setRouteMap();
 	
 	try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
 	
-	if(!myRouterIsComplete){
+	while(!myRouterIsComplete){
 		
 		myRouterIsComplete = true;
 		extendRouteMap();
@@ -162,10 +163,10 @@ public class LelannMutualExclusion extends Algorithm {
             	mr = recoitHereOrWhere(d);
             	if(mr.type == MsgType.WHEREIS){
             		
-            		mr = (WhereOrHere_IsMessage)receive( d );
+       
             		if(mr.myProcId != getId()){// While I'm not the initiator of this message, I accept it
             			
-            			if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) != -1){// If ProcIdToFind is connected to one of my doors
+            			if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){// If ProcIdToFind is connected to one of my doors
                 			
                 			mr.addProcId(mr.ProcIdToFind);
                 			mr.type = MsgType.HEREIS;
@@ -183,12 +184,17 @@ public class LelannMutualExclusion extends Algorithm {
             	}else if(mr.type == MsgType.HEREIS){
             		
             		
-            		myRouter.setDoorToMyRoute(mr.ProcIdToFind, d.getNum());
+            		for(int i=0; i<mr.getListProc().size(); i++){
+            			
+            			myRouter.setDoorToMyRoute(mr.getProcId(i), d.getNum());
+            		}
+            		
+            		myRouter.setDoorToMyRoute(getId(), -2);
             		if(mr.myProcId != getId()){
             			
             			mr.step++;
             		    door = myRouter.getDoorOnMyRoute(mr.myProcId);
-            		    if(door != -1){
+            		    if(door > -1){
             		    	
             		    	sendTo(door,mr);
             		    	
@@ -208,7 +214,18 @@ public class LelannMutualExclusion extends Algorithm {
     		
     	}
     	setMyRouterIsComplete();
-    	
+    	System.out.println("PROCESSUS "+getId());
+    	if(myRouterIsComplete){
+    		
+    		System.out.println(+getId()+" PROCESSUS COMPLET");
+    	}
+    	for(int i=0; i< getNetSize(); i++){
+			
+    		if(myRouter.getDoorOnMyRoute(i) > -1){
+    			
+    			System.out.println("porte "+myRouter.getDoorOnMyRoute(i)+" connectee au proc "+i +"\n");
+    		}
+    	}
     } 
     
     // Rule 2 : ask for critical section
