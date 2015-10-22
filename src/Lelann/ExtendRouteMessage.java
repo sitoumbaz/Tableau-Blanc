@@ -7,20 +7,22 @@ import java.util.Queue;
 
 import visidia.simulation.process.messages.Message;
 
-public class WhereOrHere_IsMessage extends Message {
+public class ExtendRouteMessage extends Message {
     
-    MsgType type;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	MsgType type;
     int myProcId;
     int ProcIdToFind;
-    int step;
     ArrayList<Integer> listProc = new ArrayList<Integer>();
     
-    public WhereOrHere_IsMessage(MsgType t, int id1, int id2, int s) {
+    public ExtendRouteMessage(MsgType t, int id1, int id2) {
     	
 		type = t;
 		myProcId = id1;
 		ProcIdToFind = id2;
-		step = s;
 	
     }
 
@@ -43,13 +45,30 @@ public class WhereOrHere_IsMessage extends Message {
     
     @Override
     public Message clone() {
-    	return new WhereOrHere_IsMessage(MsgType.WHEREIS, myProcId,ProcIdToFind,step);
+    	return new ExtendRouteMessage(MsgType.WHEREIS, myProcId,ProcIdToFind);
     }
     
     @Override 
     public String toString() {
+    	
+    	String r = "";
+    	if(getMsgType().equals(MsgType.HEREIS)){
+    		
+    		r = "HEREIS("+myProcId+","+ProcIdToFind+")";
+    	}
+    	else if(getMsgType().equals(MsgType.WHEREIS)){
+    		
+    		r = "WHEREIS("+myProcId+","+ProcIdToFind+")";
+    	}
+        else{
+        	
+        	if(getMsgType().equals(MsgType.READY)){
+        		
+        		r = "READY("+myProcId+","+ProcIdToFind+")";
+        	}
+    	}
+    	
 
-		String r = "WhereOrHereIs("+myProcId+","+ProcIdToFind+","+step+")";
 		return r;
     }
     

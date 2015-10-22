@@ -1,5 +1,5 @@
 package Lelann;
 
 public enum MsgType {
-    TOKEN,ROUTE,WHEREIS,HEREIS;
+    TOKEN,ROUTE,WHEREIS,HEREIS,READY;
 }

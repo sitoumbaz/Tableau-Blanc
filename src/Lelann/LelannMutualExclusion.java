@@ -14,7 +14,6 @@ public class LelannMutualExclusion extends Algorithm {
     // All nodes data
     private int procId;
     private int next = 0;
-    private static int step = 2;
     
     // Higher speed means lower simulation speed
     private int speed = 4;
@@ -65,7 +64,7 @@ public class LelannMutualExclusion extends Algorithm {
 	
 	setRouteMap();
 	
-	try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
+	try { Thread.sleep( 10000 ); } catch( InterruptedException ie ) {}
 	
 	while(!myRouterIsComplete){
 		
@@ -74,28 +73,70 @@ public class LelannMutualExclusion extends Algorithm {
 	
 	}
 		
+    
 	if(myRouterIsComplete){
 		
-		df = new DisplayFrame( procId );
-		displayState();
-		try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}
-		while(true){
+		myRouter.ProcBecomeReady(getId(), true);
+		for(int i=0; i< getNetSize(); i++){
 			
+			if(i != getId()){
+				
+				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(), i );
+			    sendTo(myRouter.getDoorOnMyRoute(i), mr);
+			}
+			
+		}
+		
+		df = new DisplayFrame( getId() );
+		displayState();
+		try { Thread.sleep( 5000 ); } catch( InterruptedException ie ) {}
+		int countReady = 0;
+		while(countReady < getNetSize()){
+			
+			countReady = 0;
 			Door d = new Door();
-			WhereOrHere_IsMessage mr = recoitHereOrWhere(d);
+			ExtendRouteMessage mr = recoitHereOrWhere(d);
 			if(mr.type == MsgType.WHEREIS){
 				
 				if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){
 					
 					mr.addProcId(mr.ProcIdToFind);
 					mr.type = MsgType.HEREIS;
-					mr.step = 0;
 					sendTo(d.getNum(), mr);
 				}
 			}
-			
+			if(mr.type == MsgType.READY){
+				
+				if(mr.ProcIdToFind == getId()){
+					
+					myRouter.ProcBecomeReady(mr.myProcId, true);
+					
+				}else{
+						
+					sendTo(myRouter.getDoorOnMyRoute(mr.ProcIdToFind), mr);
+					
+				}
+				
+				
+			}
+			for(int i=0; i< getNetSize(); i++){
+				
+				
+				if(myRouter.getStateOfProc(i)){
+					
+					countReady++;
+					System.out.println(" countReady("+getId()+") = true");
+					
+				}else{
+					
+					System.out.println(" countReady("+getId()+") = false");
+					
+				}
+			}
+			System.out.println(" countReady("+getId()+") = "+countReady);
 		}
-		
+		System.out.println(" countReady("+getId()+") = JE suis sorti "+countReady);
+		/* try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}*/	
 	}
 	
     }
@@ -131,7 +172,7 @@ public class LelannMutualExclusion extends Algorithm {
     		
     		if(myRouter.getDoorOnMyRoute(procId) == -1){
     			
-    			WhereOrHere_IsMessage mr = new WhereOrHere_IsMessage(MsgType.WHEREIS, getId(), procId,0 );
+    			ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.WHEREIS, getId(), procId );
     			sendWhereIsOrHereIs(mr, -1);
     			
             	Door d = new Door();
@@ -147,12 +188,10 @@ public class LelannMutualExclusion extends Algorithm {
                 			
                 			mr.addProcId(mr.ProcIdToFind);
                 			mr.type = MsgType.HEREIS;
-                			mr.step = 0;
                 			sendTo(d.getNum(), mr);
                 			
                 		}else{
                 			
-                			mr.step++;
                 			sendWhereIsOrHereIs(mr, d.getNum());
                 		}  
                 		
@@ -169,8 +208,7 @@ public class LelannMutualExclusion extends Algorithm {
             		myRouter.setDoorToMyRoute(getId(), -2);
             		if(mr.myProcId != getId()){
             			
-            			mr.step++;
-            		    door = myRouter.getDoorOnMyRoute(mr.myProcId);
+            			door = myRouter.getDoorOnMyRoute(mr.myProcId);
             		   
             		    if(door > -1){
             		    	
@@ -185,25 +223,32 @@ public class LelannMutualExclusion extends Algorithm {
             		
             	}else{
             		
-            		
+            		if(mr.type == MsgType.READY){
+            			
+            			if(mr.ProcIdToFind == getId()){
+        					
+        					myRouter.ProcBecomeReady(mr.myProcId, true);
+        					
+        				}else{
+        					
+        					if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){
+        						
+        						sendTo(myRouter.getDoorOnMyRoute(mr.ProcIdToFind), mr);
+        						
+        					}else{
+        						
+        						sendWhereIsOrHereIs(mr, d.getNum());
+        					}
+        					
+        				}
+            		}
             	}
         		
     		}
     		
     	}
     	setMyRouterIsComplete();
-    	System.out.println("PROCESSUS "+getId());
-    	if(myRouterIsComplete){
-    		
-    		System.out.println(+getId()+" PROCESSUS COMPLET");
-    	}
-    	for(int i=0; i< getNetSize(); i++){
-			
-    		if(myRouter.getDoorOnMyRoute(i) > -1){
-    			
-    			System.out.println("porte "+myRouter.getDoorOnMyRoute(i)+" connectee au proc "+i +"\n");
-    		}
-    	}
+    	
     } 
     
     // Rule 2 : ask for critical section
@@ -245,7 +290,7 @@ public class LelannMutualExclusion extends Algorithm {
     }
     
     // Send message Where Is
-    public void sendWhereIsOrHereIs(WhereOrHere_IsMessage mr, int exceptDoor){
+    public void sendWhereIsOrHereIs(ExtendRouteMessage mr, int exceptDoor){
     
 		for(int i=0; i< getArity(); i++){
     		
@@ -272,9 +317,9 @@ public class LelannMutualExclusion extends Algorithm {
     
     
  // Access to receive function
-    public WhereOrHere_IsMessage recoitHereOrWhere ( Door d ) {
+    public ExtendRouteMessage recoitHereOrWhere ( Door d ) {
 
-    	WhereOrHere_IsMessage rm = (WhereOrHere_IsMessage)receive( d );
+    	ExtendRouteMessage rm = (ExtendRouteMessage)receive( d );
     	return rm;
     }
     
@@ -310,10 +355,10 @@ public class LelannMutualExclusion extends Algorithm {
 	state = state + "#### Route processus "+getId()+" ######\n";
 	for(int i=0; i< getNetSize(); i++){
 			
-		if(myRouter.getDoorOnMyRoute(i) > -1){
+		//if(myRouter.getDoorOnMyRoute(i) > -1){
 			
 			state = state +"porte "+myRouter.getDoorOnMyRoute(i)+" connectee au proc "+i +"\n";
-		}
+		//}
 	}
 
 	df.display( state );

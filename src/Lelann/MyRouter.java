@@ -3,13 +3,17 @@ package Lelann;
 public class MyRouter {
 
 	private int myRoute[];
+	private boolean tabReady[];
 	
 	public MyRouter(int netSize){
 		
 		myRoute = new int[netSize];
+		tabReady = new boolean[netSize];
 		for(int i=0; i< netSize; i++){
 			
 			myRoute[i] = -1;
+			tabReady[i] = false;
+			
 		}
 		
 	}
@@ -19,7 +23,8 @@ public class MyRouter {
 		myRoute[procId] = door;
 	}
 	
-	public int getDoorOnMyRoute(int procId){
+    
+    public int getDoorOnMyRoute(int procId){
 		
 		return myRoute[procId];
 	}
@@ -28,5 +33,20 @@ public class MyRouter {
 		
 		return myRoute;
 	}
-	 
+	
+	
+   public boolean[] getTabReady(){
+		
+		return tabReady;
+	}
+
+    public void ProcBecomeReady(int procId, boolean state){
+		
+    	tabReady[procId] = state;
+	}
+	
+   public boolean getStateOfProc(int procId){
+		
+		return tabReady[procId];
+	}
 }
