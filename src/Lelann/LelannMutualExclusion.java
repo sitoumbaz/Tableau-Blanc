@@ -1,31 +1,29 @@
 package Lelann;
 
 // Java imports
-import java.util.Queue;
-import java.util.LinkedList;
 import java.util.Random;
 
+
+import Gui.Lanceur;
 // Visidia imports
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
 
 public class LelannMutualExclusion extends Algorithm {
     
-    // All nodes data
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	// All nodes data
     private int procId;
     private int next = 0;
-    
-    // Higher speed means lower simulation speed
-    private int speed = 4;
-    
-    // Request to give response
-    private int counter = 0;
     
     // Router
     MyRouter myRouter;
     
-    //Test if the route map is complete
-  	boolean myRouterIsComplete = true;
+    //Tableau blanc
+    Lanceur lanceur;
   	
     // Token 
     boolean token = false;
@@ -34,9 +32,6 @@ public class LelannMutualExclusion extends Algorithm {
     boolean waitForCritical = false;
     boolean inCritical = false;
 
-    // Critical section thread
-    ReceptionRules rr = null;
-    // State display frame
     DisplayFrame df;
 
     public String getDescription() {
@@ -55,9 +50,6 @@ public class LelannMutualExclusion extends Algorithm {
     @Override
     public void init() {
 
-	procId = getId();
-	Random rand = new Random( procId );
-	
 	// Init routeMap
 	myRouter = new MyRouter(getNetSize());
 	myRouter.setDoorToMyRoute(getId(), -2);
@@ -66,78 +58,18 @@ public class LelannMutualExclusion extends Algorithm {
 	
 	try { Thread.sleep( 10000 ); } catch( InterruptedException ie ) {}
 	
-	while(!myRouterIsComplete){
+	while(myRouter.complete < this.getNetSize()){
 		
-		myRouterIsComplete = true;
 		extendRouteMap();
+	}
 	
-	}
-		
-    
-	if(myRouterIsComplete){
-		
-		myRouter.ProcBecomeReady(getId(), true);
-		for(int i=0; i< getNetSize(); i++){
-			
-			if(i != getId()){
-				
-				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(), i );
-			    sendTo(myRouter.getDoorOnMyRoute(i), mr);
-			}
-			
-		}
-		
-		df = new DisplayFrame( getId() );
-		displayState();
-		try { Thread.sleep( 5000 ); } catch( InterruptedException ie ) {}
-		int countReady = 0;
-		while(countReady < getNetSize()){
-			
-			countReady = 0;
-			Door d = new Door();
-			ExtendRouteMessage mr = recoitHereOrWhere(d);
-			if(mr.type == MsgType.WHEREIS){
-				
-				if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){
-					
-					mr.addProcId(mr.ProcIdToFind);
-					mr.type = MsgType.HEREIS;
-					sendTo(d.getNum(), mr);
-				}
-			}
-			if(mr.type == MsgType.READY){
-				
-				if(mr.ProcIdToFind == getId()){
-					
-					myRouter.ProcBecomeReady(mr.myProcId, true);
-					
-				}else{
-						
-					sendTo(myRouter.getDoorOnMyRoute(mr.ProcIdToFind), mr);
-					
-				}
-				
-				
-			}
-			for(int i=0; i< getNetSize(); i++){
-				
-				
-				if(myRouter.getStateOfProc(i)){
-					
-					countReady++;
-					System.out.println(" countReady("+getId()+") = true");
-					
-				}else{
-					
-					System.out.println(" countReady("+getId()+") = false");
-					
-				}
-			}
-			System.out.println(" countReady("+getId()+") = "+countReady);
-		}
-		System.out.println(" countReady("+getId()+") = JE suis sorti "+countReady);
-		/* try { Thread.sleep( 15000 ); } catch( InterruptedException ie ) {}*/	
-	}
+	//Je continue à remplir ma table de routage avec les autres processus manquant
+	fillTheRoute();
+	lanceur = new Lanceur("Tableau Blanc Proc"+getId());
+	lanceur.start();
+	/*df = new DisplayFrame( getId() );
+	displayState();*/
+	try { Thread.sleep( 5000 ); } catch( InterruptedException ie ) {}
 	
     }
     //--------------------
@@ -203,6 +135,7 @@ public class LelannMutualExclusion extends Algorithm {
             		for(int i=0; i<mr.getListProc().size(); i++){
             			
             			myRouter.setDoorToMyRoute(mr.getProcId(i), d.getNum());
+            
             		}
             		
             		myRouter.setDoorToMyRoute(getId(), -2);
@@ -225,21 +158,11 @@ public class LelannMutualExclusion extends Algorithm {
             		
             		if(mr.type == MsgType.READY){
             			
-            			if(mr.ProcIdToFind == getId()){
+            			if(!myRouter.getStateOfProc(mr.myProcId)){
         					
+        					myRouter.ready++;
+        					sendWhereIsOrHereIs(mr, d.getNum());
         					myRouter.ProcBecomeReady(mr.myProcId, true);
-        					
-        				}else{
-        					
-        					if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){
-        						
-        						sendTo(myRouter.getDoorOnMyRoute(mr.ProcIdToFind), mr);
-        						
-        					}else{
-        						
-        						sendWhereIsOrHereIs(mr, d.getNum());
-        					}
-        					
         				}
             		}
             	}
@@ -251,6 +174,42 @@ public class LelannMutualExclusion extends Algorithm {
     	
     } 
     
+    //
+    synchronized void fillTheRoute(){
+    	
+    	    System.out.println("myRouter.ready "+myRouter.ready+" "+getNetSize());
+    		myRouter.ProcBecomeReady(getId(), true);
+    		myRouter.ready++;
+			ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(), -1 );
+			sendWhereIsOrHereIs(mr, -1);
+    		
+    		while(myRouter.ready < getNetSize()){
+    			
+    			Door d = new Door();
+    			mr = recoitHereOrWhere(d);
+    			if(mr.type == MsgType.WHEREIS){
+    				
+    				if(myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1){
+    					
+    					mr.addProcId(mr.ProcIdToFind);
+    					mr.type = MsgType.HEREIS;
+    					sendTo(d.getNum(), mr);
+    				}
+    			}
+    			if(mr.type == MsgType.READY){
+    				
+    				if(!myRouter.getStateOfProc(mr.myProcId)){
+    					
+    					myRouter.ready++;
+    					sendWhereIsOrHereIs(mr, d.getNum());
+    					myRouter.ProcBecomeReady(mr.myProcId, true);
+    				}
+    				
+    			}
+    			
+    		}
+    	
+    }
     // Rule 2 : ask for critical section
     synchronized void askForCritical() {
 
@@ -328,15 +287,12 @@ public class LelannMutualExclusion extends Algorithm {
     	
     	for(int i = 0; i < getNetSize(); i++){
     		
-    		if(myRouter.getDoorOnMyRoute(i) == -1){
+    		if(myRouter.getDoorOnMyRoute(i) != -1){
     			
-    			myRouterIsComplete = false;
+    			myRouter.complete++;
     		}
     	}
-    	if(counter != 0){
-    		
-    		myRouterIsComplete = false;
-    	}
+    	
     	
     	
     } 

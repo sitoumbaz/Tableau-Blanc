@@ -49,8 +49,8 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 	/**
 	 * Constructeur.
 	 */
-	public TableauBlancUI() {
-		super("Tableau blanc");
+	public TableauBlancUI(String title) {
+		super(title);
 
 		canvas = new TableauBlanc();
 

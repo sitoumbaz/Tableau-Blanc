@@ -5,18 +5,23 @@ import javax.swing.SwingUtilities;
 /**
  * Lanceur d'application.
  */
-public class Lanceur {
+public class Lanceur extends Thread {
 	/**
 	 * Point d'entrée de l'éxécutable.
 	 * 
 	 * @param args
 	 *            Les arguments de la ligne de commande.
 	 */
-	public static final void main(String args[]) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new TableauBlancUI();
-			}
-		});
+	 private String tittle;
+	 
+	 public Lanceur(String tittle){
+		 
+		 this.tittle = tittle;
+	 }
+	
+	public void run(){
+		
+		new TableauBlancUI(this.tittle);
 	}
+	
 }

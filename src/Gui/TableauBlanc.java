@@ -34,6 +34,7 @@ public class TableauBlanc extends JPanel {
 	 * Constructeur.
 	 */
 	public TableauBlanc() {
+		
 		super(true);
 	}
 
