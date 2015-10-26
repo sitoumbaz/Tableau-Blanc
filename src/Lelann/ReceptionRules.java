@@ -1,5 +1,4 @@
 package Lelann;
-
 import visidia.simulation.process.messages.Door;
 
 // Reception thread
@@ -19,19 +18,44 @@ public class ReceptionRules extends Thread {
 		Door d = new Door();
 
 		while (true) {
+			
+			
+			if((TokenMessage)algo.recoit(d) instanceof TokenMessage){
+				
+				TokenMessage m = (TokenMessage) algo.recoit(d);
+				int door = d.getNum();
 
-			TokenMessage m = algo.recoit(d);
-			int door = d.getNum();
+				switch (m.getMsgType()) {
 
-			switch (m.getMsgType()) {
+					case TOKEN :
+						algo.receiveTOKEN(m);
+						break;
 
-				case TOKEN :
-					algo.receiveTOKEN(door);
-					break;
-
-				default :
-					System.out.println("Error message type");
+					default :
+						System.out.println("Error message type");
+				}
+				
 			}
+			else if((FormMessage)algo.recoit(d) instanceof FormMessage){
+				
+				FormMessage m = (FormMessage) algo.recoit(d);
+				int door = d.getNum();
+
+				switch (m.getMsgType()) {
+
+					case FORME :
+						algo.receiveFormMessage(m);
+						break;
+
+					default :
+						System.out.println("Error message type");
+				}
+				
+			}else{
+				
+				System.out.println("Error message type");
+			}
+			
 		}
 	}
 }

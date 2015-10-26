@@ -17,7 +17,6 @@ public class Lanceur extends Thread {
 	public Lanceur(final String tittle) {
 
 		this.tittle = tittle;
-		tbui = new TableauBlancUI(this.tittle);
 	}
 
 	public TableauBlancUI getTbUI() {

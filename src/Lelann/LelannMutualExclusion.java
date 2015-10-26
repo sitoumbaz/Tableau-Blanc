@@ -1,10 +1,13 @@
 package Lelann;
 
 // Java imports
+import java.awt.Color;
 import java.awt.Point;
+import java.util.Random;
 
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
+import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 
 public class LelannMutualExclusion extends Algorithm {
@@ -16,21 +19,28 @@ public class LelannMutualExclusion extends Algorithm {
 	// All nodes data
 	private int procId;
 	private int next = 0;
+	private int nextProcId;
+	private int speed = 4;
 
 	// Router
-	MyRouter myRouter;
+	private MyRouter myRouter;
 
 	// Tableau blanc
-	Lanceur lanceur;
+	private Lanceur lanceur;
+	private Point p1 =  null;
+	private Point p2 = null;
+	private float tailleForm;
+	private int typeForm;
 
 	// Token
 	boolean token = false;
-
+	
+	// Critical section thread
+    ReceptionRules rr = null;
+    
 	// To display the state
 	boolean waitForCritical = false;
 	boolean inCritical = false;
-
-	DisplayFrame df;
 
 	public String getDescription() {
 
@@ -47,7 +57,11 @@ public class LelannMutualExclusion extends Algorithm {
 	//
 	@Override
 	public void init() {
-
+		
+		procId = getId();
+		nextProcId = getNextProcId();
+		Random rand = new Random( procId );
+		
 		// Init routeMap
 		myRouter = new MyRouter(getNetSize());
 		myRouter.setDoorToMyRoute(getId(), -2);
@@ -56,7 +70,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 		try {
 			// attendre que chaque proc aie recu le messge de l'autre
-			Thread.sleep(1000);
+			Thread.sleep(10000);
 		} catch (InterruptedException ie) {
 		}
 
@@ -71,25 +85,53 @@ public class LelannMutualExclusion extends Algorithm {
 
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
 		lanceur.start();
-		Point p1 = new Point(139, 170);
-		Point p2 = new Point(144, 101);
-		while (lanceur.getTbUI() == null) {
-			try {
-				Thread.sleep(100);
-				System.out.println("attente");
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		lanceur.ajouteForme(p1, p2, 2);
+		
 
-		/*
-		 * df = new DisplayFrame( getId() ); displayState();
-		 */
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(15000);
 		} catch (InterruptedException ie) {
+		}
+		
+		// Start token round
+		rr = new ReceptionRules( this );
+		rr.start();
+		
+		if ( procId == 0 ) {
+		    token = false;
+		    TokenMessage tm = new TokenMessage(MsgType.TOKEN);
+		    boolean sent = sendTo( next, tm );
+		}
+
+		while( true ) {
+		    
+		    // Wait for some time
+		    int time = ( 3 + rand.nextInt(10)) * speed * 1000;
+		    System.out.println("Process " + procId + " wait for " + time);
+		    try {
+			Thread.sleep( time );
+		    } catch( InterruptedException ie ) {}
+		    
+		    // Try to access critical section
+		    waitForCritical = true;
+		    askForCritical();
+
+		    // Access critical
+		    waitForCritical = false;
+		    inCritical = true;
+
+		    displayState();
+
+		    // Simulate critical resource use
+		    time = (1 + rand.nextInt(3)) * 1000;
+		    System.out.println("Process " + procId + " enter SC " + time);
+		    try {
+			Thread.sleep( time );
+		    } catch( InterruptedException ie ) {}
+		    System.out.println("Process " + procId + " exit SC ");
+
+		    // Release critical use
+		    inCritical = false;
+		    endCriticalUse();
 		}
 
 	}
@@ -134,19 +176,9 @@ public class LelannMutualExclusion extends Algorithm {
 				mr = recoitHereOrWhere(d);
 				if (mr.type == MsgType.WHEREIS) {
 
-					if (mr.myProcId != getId()) {// While I'm not the initiator
-													// of this message, I accept
-													// it
+					if (mr.myProcId != getId()) {// While I'm not the initiator of this message, I accept it
 
-						if (myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1) {// If
-																				// ProcIdToFind
-																				// is
-																				// connected
-																				// to
-																				// one
-																				// of
-																				// my
-																				// doors
+						if (myRouter.getDoorOnMyRoute(mr.ProcIdToFind) > -1) {// If ProcIdToFind is connected to one of my doors
 
 							mr.addProcId(mr.ProcIdToFind);
 							mr.type = MsgType.HEREIS;
@@ -206,8 +238,6 @@ public class LelannMutualExclusion extends Algorithm {
 	//
 	synchronized void fillTheRoute() {
 
-		System.out.println("myRouter.ready " + myRouter.ready + " "
-				+ getNetSize());
 		myRouter.ProcBecomeReady(getId(), true);
 		myRouter.ready++;
 		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),
@@ -246,6 +276,11 @@ public class LelannMutualExclusion extends Algorithm {
 
 		while (!token) {
 			displayState();
+			p1 = new Point(139, 170);
+			p2 = new Point(144, 101);
+			tailleForm = (float)0.2;
+			typeForm = 2;
+			lanceur.ajouteForme(p1, p2, typeForm);
 			try {
 				this.wait();
 			} catch (InterruptedException ie) {
@@ -254,34 +289,59 @@ public class LelannMutualExclusion extends Algorithm {
 	}
 
 	// Rule 3 : receive TOKEN
-	synchronized void receiveTOKEN(final int d) {
+	synchronized void receiveTOKEN(final TokenMessage tm) {
 
-		System.out.println("Process " + procId + " reveiced TOKEN from " + d);
-		next = (d == 0 ? 1 : 0);
+		next = myRouter.getDoorOnMyRoute(getNextProcId());
 
 		if (waitForCritical == true) {
-
+			
 			token = true;
 			displayState();
+			Color bg = Color.blue;
+			Color fg = Color.red;
+			FormMessage form = new FormMessage(MsgType.FORME,procId,p1,p2,tailleForm,typeForm,bg,fg);
+			boolean sent = sendTo(next, form);
+			System.out.println("proc-"+procId+" : Receive token,and need  it,  send form to "+getNextProcId()+" on door "+next);
 			notify();
 
 		} else {
 			// Forward token to successor
-			TokenMessage tm = new TokenMessage(MsgType.TOKEN);
+			System.out.println("proc-"+procId+" : Receive token, forward to "+getNextProcId()+" on door "+next);
 			boolean sent = sendTo(next, tm);
 		}
 	}
-
+	
+	// Rule 4 : receive Form
+	synchronized public void receiveFormMessage(FormMessage form) {
+		// TODO Auto-generated method stub
+		System.out.println("proc-"+procId+" : Receive form forward  to "+getNextProcId()+" on door "+next);
+		next = myRouter.getDoorOnMyRoute(getNextProcId());
+		lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
+		boolean sent = sendTo(next, form);
+	}
+	
 	// Rule 4 :
 	void endCriticalUse() {
 
+		next = myRouter.getDoorOnMyRoute(getNextProcId());
 		token = false;
 		TokenMessage tm = new TokenMessage(MsgType.TOKEN);
 		boolean sent = sendTo(next, tm);
-
+		System.out.println("proc-"+procId+" : Leave Critical Section send token to "+getNextProcId()+" on door "+next);
 		displayState();
 	}
 
+	//Determine the next proc id
+	public int getNextProcId(){
+		
+		nextProcId = procId+1;
+		if(getNetSize() == procId+1){
+			
+			nextProcId = 0;
+		}
+		
+		return nextProcId;
+	}
 	// Send message Where Is
 	public void sendWhereIsOrHereIs(final ExtendRouteMessage mr,
 									final int exceptDoor) {
@@ -296,9 +356,9 @@ public class LelannMutualExclusion extends Algorithm {
 		}
 	}
 	// Access to receive function
-	public TokenMessage recoit(final Door d) {
+	public Message recoit(final Door d) {
 
-		TokenMessage sm = (TokenMessage) receive(d);
+		Message sm = (Message) receive(d);
 		return sm;
 	}
 
@@ -350,6 +410,7 @@ public class LelannMutualExclusion extends Algorithm {
 			// }
 		}
 
-		df.display(state);
+		System.out.println(state);
 	}
+
 }

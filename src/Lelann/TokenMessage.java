@@ -7,14 +7,14 @@ public class TokenMessage extends Message {
     MsgType type;
     
     public TokenMessage(MsgType t) {
-	type = t;
+		type = t;
     }
 
     public MsgType getMsgType() { return type; }
     
     @Override
     public Message clone() {
-	return new TokenMessage(MsgType.TOKEN);
+    	return new TokenMessage(MsgType.TOKEN);
     }
     
     @Override 
