@@ -1,4 +1,3 @@
-
 package Gui;
 
 import java.awt.Color;
@@ -16,19 +15,20 @@ public class FormeRectangle extends Forme {
 	 * @param fg
 	 *            L'avant plan.
 	 * @param trait
-	 *            L'épaisseur du trait.
+	 *            L'��paisseur du trait.
 	 */
-	public FormeRectangle(Color bg, Color fg, float trait) {
+	public FormeRectangle(final Color bg, final Color fg, final float trait) {
 		super(bg, fg, trait);
 	}
 
 	/**
-	 * Méthode de dessin de l'arriere plan.
+	 * M��thode de dessin de l'arriere plan.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
 	 */
-	public void dessineArrierePlan(Graphics2D g) {
+	@Override
+	public void dessineArrierePlan(final Graphics2D g) {
 		int x = Math.min(p1.x, p2.x);
 		int y = Math.min(p1.y, p2.y);
 		int width = Math.abs(p1.x - p2.x);
@@ -37,12 +37,13 @@ public class FormeRectangle extends Forme {
 	}
 
 	/**
-	 * Méthode de dessin de l'avant plan.
+	 * M��thode de dessin de l'avant plan.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
 	 */
-	public void dessineAvantPlan(Graphics2D g) {
+	@Override
+	public void dessineAvantPlan(final Graphics2D g) {
 		int x = Math.min(p1.x, p2.x);
 		int y = Math.min(p1.y, p2.y);
 		int width = Math.abs(p1.x - p2.x);
@@ -51,10 +52,11 @@ public class FormeRectangle extends Forme {
 	}
 
 	/**
-	 * Retourne vrai si cette forme est définit par 2 points, faux pour un
+	 * Retourne vrai si cette forme est d��finit par 2 points, faux pour un
 	 * point.
 	 * 
-	 * @return vrai si cette forme est définit par 2 points, faux pour un point.
+	 * @return vrai si cette forme est d��finit par 2 points, faux pour un
+	 *         point.
 	 */
 	public boolean aDeuxPoints() {
 		return true;

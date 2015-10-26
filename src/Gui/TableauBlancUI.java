@@ -1,10 +1,10 @@
-
 package Gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -21,9 +21,10 @@ import javax.swing.SpinnerNumberModel;
 /**
  * L'interface utilisateur pour le tableau blanc.
  */
-public class TableauBlancUI extends JFrame implements ActionListener,
-		SelectionListener {
-
+public class TableauBlancUI extends JFrame
+		implements
+			ActionListener,
+			SelectionListener {
 
 	private static final long serialVersionUID = 2902412616548012434L;
 
@@ -34,7 +35,7 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 	 * <ul>
 	 * <li>0: pixel</li>
 	 * <li>1: ligne</li>
-	 * <li>2: carré</li>
+	 * <li>2: carr��</li>
 	 * <li>3: ellipse</li>
 	 * </ul>
 	 */
@@ -49,7 +50,7 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 	/**
 	 * Constructeur.
 	 */
-	public TableauBlancUI(String title) {
+	public TableauBlancUI(final String title) {
 		super(title);
 
 		canvas = new TableauBlanc();
@@ -72,12 +73,12 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 		JPanel sPanneau = new JPanel(new GridLayout(2, 2));
 		boutons[0] = createButton(0, ".", "Dessiner un pixel");
 		boutons[1] = createButton(1, "/", "Dessiner une ligne");
-		boutons[2] = createButton(2, "[]", "Dessiner un carré");
+		boutons[2] = createButton(2, "[]", "Dessiner un carr��");
 		boutons[3] = createButton(3, "()", "Dessiner une ellipse");
 		for (int i = 0; i < boutons.length; i++)
 			sPanneau.add(boutons[i]);
 		panneau.add(sPanneau, BorderLayout.NORTH);
-		// les propriétées
+		// les propri��t��es
 		JPanel sPanneau2 = new JPanel(new BorderLayout());
 		spinnerTrait = new JSpinner(new SpinnerNumberModel(1, 1, 20, 1));
 		sPanneau2.add(spinnerTrait, BorderLayout.NORTH);
@@ -101,8 +102,9 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 	/**
 	 * Creation d'un bouton de forme.
 	 */
-	public JToggleButton createButton(int numBouton, String forme,
-			String tooltip) {
+	public JToggleButton createButton(	final int numBouton,
+										final String forme,
+										final String tooltip) {
 		JToggleButton button = new JToggleButton(new ActionForme(numBouton,
 				forme, tooltip));
 		button.setPreferredSize(new Dimension(48, 48));
@@ -110,13 +112,47 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 		return button;
 	}
 
+	public void ajouteForme(final Point p1, final Point p2, final int formeID) {
+
+		float trait = ((SpinnerNumberModel) spinnerTrait.getModel()).getNumber().floatValue();
+		Forme forme = null;
+		System.out.println("### ENTREE CREATION ###\n P1 : " + p1.toString()
+				+ " p2 : " + p2.toString() + " ID : " + formeID);
+		switch (formeID) {
+			case 0 :
+				forme = new FormePixel(bg, fg, trait);
+				forme.setPoint1(p1);
+				break;
+			case 1 :
+				forme = new FormeLigne(bg, fg, trait);
+				forme.setPoint1(p1);
+				forme.setPoint2(p2);
+				break;
+			case 2 :
+				// forme = new FormeRectangle(bg, fg, trait);
+				forme = new FormeRectangle(Color.black, Color.BLACK,
+						(float) 2.0);
+				forme.setPoint1(p1);
+				forme.setPoint2(p2);
+				System.out.println("rect crée ");
+				break;
+			case 3 :
+				forme = new FormeElipse(bg, fg, trait);
+				forme.setPoint1(p1);
+				forme.setPoint2(p2);
+
+				break;
+		}
+		canvas.delivreForme(forme);
+
+	}
 	/**
-	 * Appelé lors d'un évenement "Action".
+	 * Appel�� lors d'un ��venement "Action".
 	 * 
 	 * @param e
-	 *            Description de l'évenement.
+	 *            Description de l'��venement.
 	 */
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(final ActionEvent e) {
 		String cmd = e.getActionCommand();
 		if (cmd.startsWith("select-")) {
 			int selected = -1;
@@ -132,7 +168,7 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 		} else if (cmd.startsWith("setcolor-")) {
 			if (cmd.equals("setcolor-bg")) {
 				bg = JColorChooser.showDialog(this,
-						"Nouvelle couleur d'arrière plan", bg);
+						"Nouvelle couleur d'arri��re plan", bg);
 				((JComponent) e.getSource()).setForeground(bg);
 			} else {
 				fg = JColorChooser.showDialog(this,
@@ -146,27 +182,29 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 	 * Debute un dession.
 	 * 
 	 * @param numForme
-	 *            Le numéro de forme.
+	 *            Le num��ro de forme.
 	 */
-	public void debutDessin(int numForme) {
+	public void debutDessin(final int numForme) {
 		for (int i = 0; i < boutons.length; i++)
 			boutons[i].getModel().setEnabled(false);
-		float trait = ((SpinnerNumberModel) spinnerTrait.getModel())
-				.getNumber().floatValue();
+		float trait = ((SpinnerNumberModel) spinnerTrait.getModel()).getNumber().floatValue();
+		System.out.println("### debug ### taille trait : " + trait);
 		Forme forme = null;
 		switch (numForme) {
-		case 0:
-			forme = new FormePixel(bg,fg,trait);
-			break;	
-		case 1:
-			forme = new FormeLigne(bg,fg,trait);
-			break;
-		case 2:
-			forme = new FormeRectangle(bg, fg, trait);
-			break;
-		case 3:
-			forme = new FormeElipse(bg,fg,trait);
-			break;
+			case 0 :
+				System.out.println("### debug ### taille trait : " + trait);
+				forme = new FormePixel(bg, fg, trait);
+				System.out.println("### debug ### taille trait : " + trait);
+				break;
+			case 1 :
+				forme = new FormeLigne(bg, fg, trait);
+				break;
+			case 2 :
+				forme = new FormeRectangle(bg, fg, trait);
+				break;
+			case 3 :
+				forme = new FormeElipse(bg, fg, trait);
+				break;
 		}
 		if (forme != null)
 			canvas.demarreSelection(forme, this);
@@ -183,7 +221,7 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 	 * @param msg
 	 *            Le message.
 	 */
-	public void messageSelection(String msg) {
+	public void messageSelection(final String msg) {
 		System.out.println("Selection : " + msg);
 	}
 
@@ -193,7 +231,7 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 	 * @param forme
 	 *            La forme saisie.
 	 */
-	public void finDeSelection(Forme forme) {
+	public void finDeSelection(final Forme forme) {
 		for (int i = 0; i < boutons.length; i++)
 			boutons[i].getModel().setEnabled(true);
 
@@ -207,13 +245,15 @@ public class TableauBlancUI extends JFrame implements ActionListener,
 
 		private static final long serialVersionUID = 2428884176915830386L;
 
-		public ActionForme(int numBouton, String forme, String tooltip) {
+		public ActionForme(	final int numBouton,
+							final String forme,
+							final String tooltip) {
 			super(forme);
 			putValue(ACTION_COMMAND_KEY, "select-" + numBouton);
 			putValue(SHORT_DESCRIPTION, tooltip);
 		}
 
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(final ActionEvent e) {
 		}
 	}
 }

@@ -1,4 +1,3 @@
-
 package Gui;
 
 import java.awt.Color;
@@ -16,8 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 /**
- * La classe TableauBlanc définit un tableau blanc qui contient une liste de
- * forme à dessiner.
+ * La classe TableauBlanc d��finit un tableau blanc qui contient une liste de
+ * forme �� dessiner.
  */
 public class TableauBlanc extends JPanel {
 
@@ -25,7 +24,7 @@ public class TableauBlanc extends JPanel {
 
 	/** La dimension fixe de ce canvas. */
 	private static final Dimension dim = new Dimension(256, 256);
-	/** La liste des formes à dessiner (dans l'ordre de dession) . */
+	/** La liste des formes �� dessiner (dans l'ordre de dession) . */
 	private LinkedList<Forme> formes = new LinkedList<Forme>();
 	/** La couleur de fond du tableau blanc. */
 	private Color bg = new Color(255, 255, 255);
@@ -34,17 +33,17 @@ public class TableauBlanc extends JPanel {
 	 * Constructeur.
 	 */
 	public TableauBlanc() {
-		
+
 		super(true);
 	}
 
 	/**
-	 * Méthode de dessin.
+	 * M��thode de dessin.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
 	 */
-	public void paint(Graphics g) {
+	public void paint(final Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
 		g2d.clipRect(0, 0, dim.width, dim.height);
 		// sauvegarde de la couleur courante.
@@ -56,7 +55,7 @@ public class TableauBlanc extends JPanel {
 		g2d.setColor(sauve);
 
 		synchronized (formes) {
-			// Chacune des formes à la charge de son dessin
+			// Chacune des formes �� la charge de son dessin
 			Iterator<Forme> it = formes.iterator();
 			while (it.hasNext()) {
 				Forme forme = it.next();
@@ -66,30 +65,30 @@ public class TableauBlanc extends JPanel {
 	}
 
 	/**
-	 * Ajout d'une forme à dessiner.
+	 * Ajout d'une forme �� dessiner.
 	 * 
 	 * @param forme
-	 *            La forme à dessiner.
+	 *            La forme �� dessiner.
 	 */
-	public void delivreForme(Forme forme) {
+	public void delivreForme(final Forme forme) {
 		synchronized (formes) {
 			formes.add(forme);
 		}
-		// Cette méthode sera appeler dans un thread créé par un object
-		// distant. L'appel qui suit permet de déléguer la mise à jour
+		// Cette m��thode sera appeler dans un thread cr���� par un object
+		// distant. L'appel qui suit permet de d��l��guer la mise �� jour
 		// du dessin au thread Swing.
 		SwingUtilities.invokeLater(new Redessin(this));
 	}
 
 	/**
-	 * Démarre une selection.
+	 * D��marre une selection.
 	 * 
 	 * @param forme
-	 *            la forme à renseigner.
+	 *            la forme �� renseigner.
 	 * @param sl
-	 *            L'écouteur de selection.
+	 *            L'��couteur de selection.
 	 */
-	public void demarreSelection(Forme forme, SelectionListener sl) {
+	public void demarreSelection(final Forme forme, final SelectionListener sl) {
 		SelectionThread selectionThread = new SelectionThread(this, sl, forme);
 		selectionThread.start();
 	}
@@ -110,10 +109,11 @@ public class TableauBlanc extends JPanel {
 	}
 
 	/**
-	 * Thread gérant la selection des coordonnées d'une forme.
+	 * Thread g��rant la selection des coordonn��es d'une forme.
 	 */
-	private static class SelectionThread extends Thread implements
-			MouseListener {
+	private static class SelectionThread extends Thread
+			implements
+				MouseListener {
 		/** Le premier point lors d'une selection. */
 		private Point p1 = null;
 		/** Le second point lors d'une selection. */
@@ -122,27 +122,28 @@ public class TableauBlanc extends JPanel {
 		private Object verrouP1 = new Object();
 		/** Le verrou sur le second point. */
 		private Object verrouP2 = new Object();
-		/** Le numéro du point en cours de selection. */
+		/** Le num��ro du point en cours de selection. */
 		private int numPoint = -1;
-		/** La forme à renseigner. */
+		/** La forme �� renseigner. */
 		private Forme forme;
-		/** Le composant propriétaire. */
+		/** Le composant propri��taire. */
 		private Component proprio;
-		/** L'écouteur de selection. */
+		/** L'��couteur de selection. */
 		private SelectionListener sl;
 
 		/**
-		 * Démarre une selection.
+		 * D��marre une selection.
 		 * 
 		 * @param proprio
-		 *            Le composant propriétaire.
+		 *            Le composant propri��taire.
 		 * @param sl
-		 *            L'écouteur de selection.
+		 *            L'��couteur de selection.
 		 * @param forme
-		 *            la forme à renseigner.
+		 *            la forme �� renseigner.
 		 */
-		public SelectionThread(Component proprio, SelectionListener sl,
-				Forme forme) {
+		public SelectionThread(	final Component proprio,
+								final SelectionListener sl,
+								final Forme forme) {
 			this.proprio = proprio;
 			this.forme = forme;
 			this.sl = sl;
@@ -155,9 +156,9 @@ public class TableauBlanc extends JPanel {
 		public void run() {
 			do {
 				if (forme.aDeuxPoints())
-					sl.messageSelection("Sélectionnez le premier point.");
+					sl.messageSelection("S��lectionnez le premier point.");
 				else
-					sl.messageSelection("Sélectionnez le point.");
+					sl.messageSelection("S��lectionnez le point.");
 				synchronized (verrouP1) {
 					numPoint = 1;
 					if (p1 == null) {
@@ -165,8 +166,7 @@ public class TableauBlanc extends JPanel {
 						try {
 							verrouP1.wait();
 						} catch (InterruptedException e) {
-							System.err
-									.print("TableauBlanc::Selection::run(): Oh oh :");
+							System.err.print("TableauBlanc::Selection::run(): Oh oh :");
 							e.printStackTrace(System.err);
 						}
 					}
@@ -177,7 +177,7 @@ public class TableauBlanc extends JPanel {
 
 			if (forme.aDeuxPoints()) {
 				do {
-					sl.messageSelection("Sélectionnez le second point.");
+					sl.messageSelection("S��lectionnez le second point.");
 					synchronized (verrouP2) {
 						numPoint = 2;
 						if (p2 == null) {
@@ -185,8 +185,7 @@ public class TableauBlanc extends JPanel {
 							try {
 								verrouP2.wait();
 							} catch (InterruptedException e) {
-								System.err
-										.print("TableauBlanc::Selection::run(): Oh oh :");
+								System.err.print("TableauBlanc::Selection::run(): Oh oh :");
 								e.printStackTrace(System.err);
 							}
 						}
@@ -200,7 +199,7 @@ public class TableauBlanc extends JPanel {
 		}
 
 		// evenement souris
-		public void mouseClicked(MouseEvent e) {
+		public void mouseClicked(final MouseEvent e) {
 			Point p = e.getPoint();
 			if (numPoint == 1) {
 				synchronized (verrouP1) {
@@ -216,19 +215,19 @@ public class TableauBlanc extends JPanel {
 		}
 
 		// evenement souris
-		public void mouseEntered(MouseEvent e) {
+		public void mouseEntered(final MouseEvent e) {
 		}
 
 		// evenement souris
-		public void mouseExited(MouseEvent e) {
+		public void mouseExited(final MouseEvent e) {
 		}
 
 		// evenement souris
-		public void mousePressed(MouseEvent e) {
+		public void mousePressed(final MouseEvent e) {
 		}
 
 		// evenement souris
-		public void mouseReleased(MouseEvent e) {
+		public void mouseReleased(final MouseEvent e) {
 		}
 
 	}
@@ -239,7 +238,7 @@ public class TableauBlanc extends JPanel {
 	private static class Redessin implements Runnable {
 		private Component comp;
 
-		public Redessin(Component comp) {
+		public Redessin(final Component comp) {
 			this.comp = comp;
 		}
 
