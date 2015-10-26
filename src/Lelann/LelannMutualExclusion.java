@@ -68,11 +68,21 @@ public class LelannMutualExclusion extends Algorithm {
 		// Je continue de remplir ma table de routage avec les autres processus
 		// manquant
 		fillTheRoute();
+
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
+		lanceur.start();
 		Point p1 = new Point(139, 170);
 		Point p2 = new Point(144, 101);
+		while (lanceur.getTbUI() == null) {
+			try {
+				Thread.sleep(100);
+				System.out.println("attente");
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		lanceur.ajouteForme(p1, p2, 2);
-		// lanceur.start();
 
 		/*
 		 * df = new DisplayFrame( getId() ); displayState();

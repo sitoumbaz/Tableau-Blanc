@@ -1,13 +1,19 @@
 A FAIRE : 
 
 Remplacer le wiat(10000) par des acus?s de reception -> ed
+
 virer les messages + refaire lanceur en thread + reverifier les constantes (ex color.black ) -> ed
-definir coordonnees max et faire un random aproproprie pour generer points
+
+definir coordonnees max et faire un random aproproprie pour generer points -> ed
+
+creer un logger vers un fichier .txt et donc faire que le programme ecrive des messages pertinents
 
 creer type de message forme pour transferer les formes
 
 implementer lelann 
+
 ricard,
+
 le dernier.
 
 

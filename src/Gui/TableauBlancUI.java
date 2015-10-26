@@ -116,8 +116,6 @@ public class TableauBlancUI extends JFrame
 
 		float trait = ((SpinnerNumberModel) spinnerTrait.getModel()).getNumber().floatValue();
 		Forme forme = null;
-		System.out.println("### ENTREE CREATION ###\n P1 : " + p1.toString()
-				+ " p2 : " + p2.toString() + " ID : " + formeID);
 		switch (formeID) {
 			case 0 :
 				forme = new FormePixel(bg, fg, trait);
