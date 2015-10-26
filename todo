@@ -1,20 +1,37 @@
-A FAIRE : 
+--------------------------------------  A FAIRE :  ----------------------------------------------------------------------------- 
 
-Remplacer le wiat(10000) par des acus?s de reception -> ed
+Remplacer le wiat(10000) par des acuses de reception pour eviter d'avoir des temps d attente aleatoire
 
-virer les messages + refaire lanceur en thread + reverifier les constantes (ex color.black ) -> ed
+Virer les messages de debug + refaire lanceur en thread + reverifier les constantes (ex color.black ) 
 
-definir coordonnees max et faire un random aproproprie pour generer points -> ed
+Faire un moteur de tests :
+	1) definir une random entre 1 et 5 et si le resultat est 1 ou 2 on prend la section critique ( 2 chances sur 5 )
+	2) definir un random entre 0 et 3 pour la forme a choisir
+	3.1) Si c'est un 0 c'est un pixel donc un fait un random pour un x et un y et on dessine ce point
+	3.2) Si c'est autre chose il nous faudra 2 points donc on fait un random du premier point
+		Pour le deuxieme point on fera un deuxieme random entre 10 et 50 par exemple pour definir la taille de la forme 
+		ca nous evitera d'avoir des fores qui prennent tout le tableau
+	
+Modifier tableauBlancUI.java pour pouvoir faire des tests manuel :
+	1) ajouter un bouton "demande de sc"
+	2) ajouter un bouton "liberer sc"
 
-creer un logger vers un fichier .txt et donc faire que le programme ecrive des messages pertinents
+Creer un logger vers un fichier .txt et donc faire que le programme ecrive des messages pertinents ( table de routage, demande de sc, prise de sc, ecrite de form, envoi de forme ) 
 
-creer type de message forme pour transferer les formes
+Creer type de message forme pour transferer les formes
 
-implementer lelann 
+Dans le type de message token ajouter un destinataire, comme ca si on le passe a un voisin qui n'est pas destinataire il fera le relai
 
-ricard,
+Implementer lelann 
 
-le dernier.
+Implementer ricard,
+
+Implementer le dernier.
+
+Faire le squelette du rapport
 
 
+------------------------------------- FAIT : ---------------------------------------------------------------------------------
 
+
+RIEN DU TOUT !!!!!-
