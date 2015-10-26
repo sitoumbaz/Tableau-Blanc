@@ -4,6 +4,8 @@ Remplacer le wiat(10000) par des acuses de reception pour eviter d'avoir des tem
 
 Virer les messages de debug + refaire lanceur en thread + reverifier les constantes (ex color.black ) 
 
+Implementer lelann
+
 Faire un moteur de tests :
 	1) definir une random entre 1 et 5 et si le resultat est 1 ou 2 on prend la section critique ( 2 chances sur 5 )
 	2) definir un random entre 0 et 3 pour la forme a choisir
@@ -22,7 +24,6 @@ Creer type de message forme pour transferer les formes
 
 Dans le type de message token ajouter un destinataire, comme ca si on le passe a un voisin qui n'est pas destinataire il fera le relai
 
-Implementer lelann 
 
 Implementer ricard,
 
