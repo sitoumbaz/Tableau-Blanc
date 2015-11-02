@@ -173,6 +173,7 @@ public class TableauBlanc extends JPanel {
 					numPoint = -1;
 				}
 			} while (p1 == null);
+			System.out.println("###DEBUG### coord : " + p1);
 			forme.setPoint1(p1);
 
 			if (forme.aDeuxPoints()) {

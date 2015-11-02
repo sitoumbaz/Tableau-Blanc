@@ -6,13 +6,7 @@ Virer les messages de debug + refaire lanceur en thread + reverifier les constan
 
 Implementer lelann
 
-Faire un moteur de tests :
-	1) definir une random entre 1 et 5 et si le resultat est 1 ou 2 on prend la section critique ( 2 chances sur 5 )
-	2) definir un random entre 0 et 3 pour la forme a choisir
-	3.1) Si c'est un 0 c'est un pixel donc un fait un random pour un x et un y et on dessine ce point
-	3.2) Si c'est autre chose il nous faudra 2 points donc on fait un random du premier point
-		Pour le deuxieme point on fera un deuxieme random entre 10 et 50 par exemple pour definir la taille de la forme 
-		ca nous evitera d'avoir des fores qui prennent tout le tableau
+Tester le moteur de tests
 	
 Modifier tableauBlancUI.java pour pouvoir faire des tests manuel :
 	1) ajouter un bouton "demande de sc"
@@ -34,5 +28,10 @@ Faire le squelette du rapport
 
 ------------------------------------- FAIT : ---------------------------------------------------------------------------------
 
-
-RIEN DU TOUT !!!!!-
+Faire un moteur de tests :
+	1) definir une random entre 1 et 5 et si le resultat est 1 ou 2 on prend la section critique ( 2 chances sur 5 )
+	2) definir un random entre 0 et 3 pour la forme a choisir
+	3.1) Si c'est un 0 c'est un pixel donc un fait un random pour un x et un y et on dessine ce point
+	3.2) Si c'est autre chose il nous faudra 2 points donc on fait un random du premier point
+		Pour le deuxieme point on fera un deuxieme random entre 10 et 50 par exemple pour definir la taille de la forme 
+		ca nous evitera d'avoir des fores qui prennent tout le tableau

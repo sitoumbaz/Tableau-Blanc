@@ -12,11 +12,11 @@ public class Lanceur extends Thread {
 	 * @param args
 	 *            Les arguments de la ligne de commande.
 	 */
-	private String tittle;
+	private String title;
 	TableauBlancUI tbui;
-	public Lanceur(final String tittle) {
+	public Lanceur(final String title) {
 
-		this.tittle = tittle;
+		this.title = title;
 	}
 
 	public TableauBlancUI getTbUI() {
@@ -25,7 +25,7 @@ public class Lanceur extends Thread {
 
 	public void run() {
 
-		tbui = new TableauBlancUI(this.tittle);
+		tbui = new TableauBlancUI(this.title);
 	}
 
 	public void ajouteForme(final Point p1, final Point p2, final int formeID) {
