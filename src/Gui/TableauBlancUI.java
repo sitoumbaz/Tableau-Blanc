@@ -127,12 +127,9 @@ public class TableauBlancUI extends JFrame
 				forme.setPoint2(p2);
 				break;
 			case 2 :
-				// forme = new FormeRectangle(bg, fg, trait);
-				forme = new FormeRectangle(Color.black, Color.BLACK,
-						(float) 2.0);
+				forme = new FormeRectangle(bg, fg, trait);
 				forme.setPoint1(p1);
 				forme.setPoint2(p2);
-				System.out.println("rect crée ");
 				break;
 			case 3 :
 				forme = new FormeElipse(bg, fg, trait);
@@ -186,13 +183,10 @@ public class TableauBlancUI extends JFrame
 		for (int i = 0; i < boutons.length; i++)
 			boutons[i].getModel().setEnabled(false);
 		float trait = ((SpinnerNumberModel) spinnerTrait.getModel()).getNumber().floatValue();
-		System.out.println("### debug ### taille trait : " + trait);
 		Forme forme = null;
 		switch (numForme) {
 			case 0 :
-				System.out.println("### debug ### taille trait : " + trait);
 				forme = new FormePixel(bg, fg, trait);
-				System.out.println("### debug ### taille trait : " + trait);
 				break;
 			case 1 :
 				forme = new FormeLigne(bg, fg, trait);
