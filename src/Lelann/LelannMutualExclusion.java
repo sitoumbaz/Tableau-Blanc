@@ -206,7 +206,9 @@ public class LelannMutualExclusion extends Algorithm {
 				procId);
 		mr.routingTable = myRouter.getMyRoute();
 		sendRouteMessage(mr, -1);
-		log.logMsg("myRouter.complete(" + getId() + ") = " + myRouter.complete);
+
+		// log.logMsg("myRouter.complete(" + getId() + ") = " +
+		// myRouter.complete);
 		// Stay awaiting while my routing table is not complete
 		while (myRouter.ready < getNetSize()) {
 

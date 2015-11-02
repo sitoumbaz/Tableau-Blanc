@@ -16,4 +16,8 @@ public class Logger {
 
 	}
 
+	public void sauvegarde() {
+
+	}
+
 }
