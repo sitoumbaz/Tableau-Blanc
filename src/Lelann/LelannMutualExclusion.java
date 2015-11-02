@@ -124,7 +124,7 @@ public class LelannMutualExclusion extends Algorithm {
 		    waitForCritical = false;
 		    inCritical = true;
 
-		    displayState();
+		    //displayState();
 
 		    // Simulate critical resource use
 		    time = (1 + rand.nextInt(3)) * 1000;
@@ -222,8 +222,8 @@ public class LelannMutualExclusion extends Algorithm {
 
 	// Rule 4 : receive TOKEN
 	synchronized void receiveTOKEN(final TokenMessage tm) {
-
 		
+		System.out.println(" Proc id "+procId+"  tm "+tm.idProc);
 		if(tm.idProc == procId){
 			
 			next = myRouter.getDoorOnMyRoute(getNextProcId());
@@ -234,7 +234,7 @@ public class LelannMutualExclusion extends Algorithm {
 				displayState();
 				Color bg = Color.blue;
 				Color fg = Color.red;
-				FormMessage form = new FormMessage(MsgType.FORME,procId,p1,p2,tailleForm,typeForm,bg,fg);
+				FormMessage form = new FormMessage(MsgType.FORME,procId,getNextProcId(),p1,p2,tailleForm,typeForm,bg,fg);
 				boolean sent = sendTo(next, form);
 				System.out.println("proc-"+procId+" : Receive token and need  it,  send form to "+getNextProcId()+" on door "+next);
 				notify();
@@ -242,6 +242,7 @@ public class LelannMutualExclusion extends Algorithm {
 			}else{
 				
 				System.out.println("proc-"+procId+" : Receive token, forward to "+getNextProcId()+" on door "+next);
+				tm.idProc = getNextProcId();
 				boolean sent = sendTo(next, tm);
 				
 			}
@@ -258,9 +259,18 @@ public class LelannMutualExclusion extends Algorithm {
 	synchronized public void receiveFormMessage(FormMessage form) {
 		// TODO Auto-generated method stub
 		System.out.println("proc-"+procId+" : Receive form forward  to "+getNextProcId()+" on door "+next);
-		next = myRouter.getDoorOnMyRoute(getNextProcId());
 		lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-		boolean sent = sendTo(next, form);
+		/* I send the form if only the next proc is different of the owner of this form */
+		if(getNextProcId() != form.procId){
+			
+			if( getNextProcId() > form.nextProcId ){
+				
+				form.nextProcId = getNextProcId();
+			}
+			next = myRouter.getDoorOnMyRoute(form.nextProcId);
+			boolean sent = sendTo(next, form);
+		}
+		
 	}
 	
 	// Rule 6 :
@@ -298,10 +308,27 @@ public class LelannMutualExclusion extends Algorithm {
 
 		}
 	}
+	
 	// Access to receive function
+	@SuppressWarnings("finally")
 	public Message recoit(final Door d) {
 
-		Message sm = (Message) receive(d);
+		Message m = receive(d);
+		return m;
+	}
+		
+	
+	// Access to receive function
+	public TokenMessage recoitToken(final Door d) {
+
+		TokenMessage sm = (TokenMessage) receive(d);
+		return sm;
+	}
+	
+	// Access to receive function
+	public FormMessage recoitForme(final Door d) {
+
+		FormMessage sm = (FormMessage) receive(d);
 		return sm;
 	}
 

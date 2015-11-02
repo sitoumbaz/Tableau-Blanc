@@ -9,6 +9,7 @@ public class FormMessage extends Message {
     
     MsgType type;
     int procId;
+    int nextProcId;
     Point point1;
     Point point2;
     float tailleForm;
@@ -17,10 +18,11 @@ public class FormMessage extends Message {
     int typeForm;
     
     
-    public FormMessage(MsgType t, int id, Point p1, Point p2, float taille, int type_form, Color b, Color f) {
+    public FormMessage(MsgType t, int id, int idNext, Point p1, Point p2, float taille, int type_form, Color b, Color f) {
 		
     	type = t;
     	procId = id;
+    	nextProcId = idNext;
 		point1 = p1;
 		point2 = p2;
 		tailleForm = taille;
@@ -33,7 +35,7 @@ public class FormMessage extends Message {
     
     @Override
     public Message clone() {
-    	return new FormMessage(MsgType.FORME,procId,point1,point2,tailleForm,typeForm,bg,fg);
+    	return new FormMessage(MsgType.FORME,procId,nextProcId,point1,point2,tailleForm,typeForm,bg,fg);
     }
     
     @Override 

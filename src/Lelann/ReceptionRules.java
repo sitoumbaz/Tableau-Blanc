@@ -1,5 +1,7 @@
 package Lelann;
+
 import visidia.simulation.process.messages.Door;
+import visidia.simulation.process.messages.Message;
 
 // Reception thread
 public class ReceptionRules extends Thread {
@@ -19,16 +21,31 @@ public class ReceptionRules extends Thread {
 
 		while (true) {
 			
-			System.out.println("Receive token "+algo.procId);
-			if((TokenMessage)algo.recoit(d) instanceof TokenMessage){
+		
+			Message m_rec = algo.recoit(d);
+			if(m_rec instanceof TokenMessage){
 				
-				TokenMessage m = (TokenMessage) algo.recoit(d);
-				int door = d.getNum();
-
+				System.out.println(" Message type Proc id "+algo.procId);
+				TokenMessage m = null;
+				try{
+					
+					
+					m =  (TokenMessage)m_rec;
+					System.out.println(" Youpi");
+					
+				}catch(Exception e){
+					
+					System.out.println(" Mince "+e.getMessage());
+				}
+				
+				System.out.println(" Message type "+m.type);
 				switch (m.getMsgType()) {
 
 					case TOKEN :
+						
+						System.out.println("Call send "+algo.procId);
 						algo.receiveTOKEN(m);
+						
 						break;
 
 					default :
@@ -36,9 +53,9 @@ public class ReceptionRules extends Thread {
 				}
 				
 			}
-			else if((FormMessage)algo.recoit(d) instanceof FormMessage){
+			else if(m_rec instanceof FormMessage){
 				
-				FormMessage m = (FormMessage) algo.recoit(d);
+				FormMessage m =  (FormMessage)m_rec;
 				int door = d.getNum();
 
 				switch (m.getMsgType()) {
@@ -53,7 +70,14 @@ public class ReceptionRules extends Thread {
 				
 			}else{
 				
-				System.out.println("Error message type");
+				if(m_rec instanceof ExtendRouteMessage ){
+					
+						System.out.println("Receive message ExtendRouteMessage");
+						
+				}else{
+					
+					System.out.println("Error message");
+				}
 			}
 			
 		}
