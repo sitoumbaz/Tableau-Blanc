@@ -16,7 +16,7 @@ public class ExtendRouteMessage extends Message {
 	MsgType type;
     int myProcId;
     int ProcIdToFind;
-    ArrayList<Integer> listProc = new ArrayList<Integer>();
+    int routingTable[];
     
     public ExtendRouteMessage(MsgType t, int id1, int id2) {
     	
@@ -25,27 +25,12 @@ public class ExtendRouteMessage extends Message {
 		ProcIdToFind = id2;
 	
     }
-
-    public void addProcId(int procId){
-  
-    	listProc.add(procId);
-    }
-    
-    public int getProcId(int index){
-    	
-    	return listProc.get(index);
-    }
-    
-    public ArrayList<Integer> getListProc(){
-    	
-    	return listProc;
-    }
     
     public MsgType getMsgType() { return type; }
     
     @Override
     public Message clone() {
-    	return new ExtendRouteMessage(MsgType.WHEREIS, myProcId,ProcIdToFind);
+    	return new ExtendRouteMessage(MsgType.TABLE, myProcId,ProcIdToFind);
     }
     
     @Override 
@@ -56,9 +41,9 @@ public class ExtendRouteMessage extends Message {
     		
     		r = "HEREIS("+myProcId+","+ProcIdToFind+")";
     	}
-    	else if(getMsgType().equals(MsgType.WHEREIS)){
+    	else if(getMsgType().equals(MsgType.TABLE)){
     		
-    		r = "WHEREIS("+myProcId+","+ProcIdToFind+")";
+    		r = "TABLE("+myProcId+","+ProcIdToFind+")";
     	}
         else{
         	

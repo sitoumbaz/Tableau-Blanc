@@ -5,16 +5,18 @@ import visidia.simulation.process.messages.Message;
 public class TokenMessage extends Message {
     
     MsgType type;
+    int idProc;
     
-    public TokenMessage(MsgType t) {
+    public TokenMessage(MsgType t, int proc) {
 		type = t;
+		idProc = proc;
     }
 
     public MsgType getMsgType() { return type; }
     
     @Override
     public Message clone() {
-    	return new TokenMessage(MsgType.TOKEN);
+    	return new TokenMessage(MsgType.TOKEN, idProc);
     }
     
     @Override 

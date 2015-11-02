@@ -19,7 +19,7 @@ public class ReceptionRules extends Thread {
 
 		while (true) {
 			
-			
+			System.out.println("Receive token "+algo.procId);
 			if((TokenMessage)algo.recoit(d) instanceof TokenMessage){
 				
 				TokenMessage m = (TokenMessage) algo.recoit(d);

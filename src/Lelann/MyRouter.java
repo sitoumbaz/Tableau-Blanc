@@ -4,8 +4,8 @@ public class MyRouter {
 
 	private int myRoute[];
 	private boolean tabReady[];
-	public int ready;
-	public int complete;
+	public int ready = 1;
+	public int complete = 1;
 	
 	public MyRouter(int netSize){
 		

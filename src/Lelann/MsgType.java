@@ -1,7 +1,7 @@
 package Lelann;
 
 public enum MsgType {
-	TOKEN, ROUTE, WHEREIS, HEREIS, READY, FORME;
+	TOKEN, ROUTE, TABLE, HEREIS, READY, FORME;
 
 	// route : envois message au voisin pour le connaitre
 	// token : pas implémenté à voir
