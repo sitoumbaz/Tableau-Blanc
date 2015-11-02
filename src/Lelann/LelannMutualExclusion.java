@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.Random;
 
+import logger.Logger;
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
@@ -51,6 +52,7 @@ public class LelannMutualExclusion extends Algorithm {
 	// Moteur de test automatique qui crée des formes aléatoirement
 	MoteurTest motTest;
 
+	@Override
 	public String getDescription() {
 
 		return ("Lelann Algorithm for Mutual Exclusion");
@@ -68,7 +70,9 @@ public class LelannMutualExclusion extends Algorithm {
 	public void init() {
 
 		procId = getId();
-		Random rand = new Random(procId);
+		Logger log = new Logger(procId);
+
+		Random rand = new Random();
 		netSize = getNetSize();
 		arity = getArity();
 
@@ -87,11 +91,14 @@ public class LelannMutualExclusion extends Algorithm {
 		extendRoutingTable();
 		sayIamReady();
 
-		System.out.println("Ready(" + getId() + ") = " + myRouter.ready);
+		log.logMsg("Ready(" + getId() + ") = " + myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
 		MoteurTest motTest = new MoteurTest(lanceur);
 		lanceur.start();
 
+		// ici le tableau blanc est deja construit
+		// attente que tous les procs aient reçu le message ready
+		// remplacer par des acusés de reception
 		try {
 			Thread.sleep(15000);
 		} catch (InterruptedException ie) {
@@ -111,9 +118,9 @@ public class LelannMutualExclusion extends Algorithm {
 
 		while (true) {
 
-			// Wait for some time
+			// attente avant la prochaine demande de section critique
 			int time = (3 + rand.nextInt(10)) * speed * 1000;
-			System.out.println("Process " + procId + " wait for " + time);
+			log.logMsg("Wait for " + time);
 			try {
 				Thread.sleep(time);
 			} catch (InterruptedException ie) {
@@ -131,12 +138,12 @@ public class LelannMutualExclusion extends Algorithm {
 
 			// Simulate critical resource use
 			time = (1 + rand.nextInt(3)) * 1000;
-			System.out.println("Process " + procId + " enter SC " + time);
+			log.logMsg("Enter SC " + time);
 			try {
 				Thread.sleep(time);
 			} catch (InterruptedException ie) {
 			}
-			System.out.println("Process " + procId + " exit SC ");
+			log.logMsg("Exit SC");
 
 			// Release critical use
 			inCritical = false;
@@ -199,8 +206,7 @@ public class LelannMutualExclusion extends Algorithm {
 				procId);
 		mr.routingTable = myRouter.getMyRoute();
 		sendRouteMessage(mr, -1);
-		System.out.println("myRouter.complete(" + getId() + ") = "
-				+ myRouter.complete);
+		log.logMsg("myRouter.complete(" + getId() + ") = " + myRouter.complete);
 		// Stay awaiting while my routing table is not complete
 		while (myRouter.ready < getNetSize()) {
 
@@ -242,6 +248,9 @@ public class LelannMutualExclusion extends Algorithm {
 				System.out.println("proc-" + procId
 						+ " : Receive token and need  it,  send form to "
 						+ getNextProcId() + " on door " + next);
+				// log.logMsg("proc-" + procId
+				// + " : Receive token and need  it,  send form to "
+				// + getNextProcId() + " on door " + next);
 				notify();
 
 			} else {
@@ -260,7 +269,6 @@ public class LelannMutualExclusion extends Algorithm {
 			boolean sent = sendTo(next, tm);
 		}
 	}
-
 	// Rule 5 : receive Form
 	synchronized public void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
