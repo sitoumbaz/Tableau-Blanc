@@ -39,9 +39,6 @@ public class LelannMutualExclusion extends Algorithm {
 	// Token
 	boolean token = false;
 
-	// virtual ring
-	VirtualRing vr = null;
-
 	// Critical section thread
 	ReceptionRules rr = null;
 
@@ -49,7 +46,7 @@ public class LelannMutualExclusion extends Algorithm {
 	boolean waitForCritical = false;
 	boolean inCritical = false;
 
-	// Moteur de test automatique qui crée des formes aléatoirement
+	// Pixel Generator
 	MoteurTest motTest;
 
 	@Override
@@ -93,7 +90,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 		log.logMsg("Ready(" + getId() + ") = " + myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
-		MoteurTest motTest = new MoteurTest(lanceur);
+		motTest = new MoteurTest();
 		lanceur.start();
 
 		// ici le tableau blanc est deja construit
@@ -116,7 +113,7 @@ public class LelannMutualExclusion extends Algorithm {
 			boolean sent = sendTo(next, tm);
 		}
 
-<<<<<<< HEAD
+
 		while( true ) {
 		    
 		    // Wait for some time
@@ -147,16 +144,15 @@ public class LelannMutualExclusion extends Algorithm {
 		    // Release critical use
 		    inCritical = false;
 		    endCriticalUse();
-=======
+		    
 		while (true) {
 
 			// attente avant la prochaine demande de section critique
-			int time = (3 + rand.nextInt(10)) * speed * 1000;
+			time = (3 + rand.nextInt(10)) * speed * 1000;
 			log.logMsg("Wait for " + time);
 			try {
 				Thread.sleep(time);
-			} catch (InterruptedException ie) {
-			}
+			} catch (InterruptedException ie) {}
 
 			// Try to access critical section
 			waitForCritical = true;
@@ -180,8 +176,10 @@ public class LelannMutualExclusion extends Algorithm {
 			// Release critical use
 			inCritical = false;
 			endCriticalUse();
->>>>>>> 108865d03cf884e3dce5a67b788465fe291a8bf8
 		}
+		
+		
+	   }
 
 	}
 	// --------------------
@@ -196,7 +194,7 @@ public class LelannMutualExclusion extends Algorithm {
 			RouteMessage mr = new RouteMessage(MsgType.ROUTE, getId());
 			boolean send = sendTo(i, mr);
 		}
-
+		
 		int i = 0;
 		while (i < getArity()) {
 
@@ -235,8 +233,7 @@ public class LelannMutualExclusion extends Algorithm {
 	// ready like me
 	synchronized void sayIamReady() {
 
-		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),
-				procId);
+		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),procId);
 		mr.routingTable = myRouter.getMyRoute();
 		sendRouteMessage(mr, -1);
 
@@ -257,6 +254,10 @@ public class LelannMutualExclusion extends Algorithm {
 		while (!token) {
 			displayState();
 			motTest.creerForme();
+			p1 = motTest.getPoint1();
+			p2 = motTest.getPoint2();
+			typeForm = motTest.getChoixForme();
+			lanceur.ajouteForme(p1, p2, typeForm);
 			try {
 				this.wait();
 			} catch (InterruptedException ie) {
@@ -266,16 +267,9 @@ public class LelannMutualExclusion extends Algorithm {
 
 	// Rule 4 : receive TOKEN
 	synchronized void receiveTOKEN(final TokenMessage tm) {
-<<<<<<< HEAD
 		
-		System.out.println(" Proc id "+procId+"  tm "+tm.idProc);
-		if(tm.idProc == procId){
-			
-=======
 
 		if (tm.idProc == procId) {
-
->>>>>>> 108865d03cf884e3dce5a67b788465fe291a8bf8
 			next = myRouter.getDoorOnMyRoute(getNextProcId());
 			if (waitForCritical) {
 
@@ -284,12 +278,7 @@ public class LelannMutualExclusion extends Algorithm {
 				displayState();
 				Color bg = Color.blue;
 				Color fg = Color.red;
-<<<<<<< HEAD
 				FormMessage form = new FormMessage(MsgType.FORME,procId,getNextProcId(),p1,p2,tailleForm,typeForm,bg,fg);
-=======
-				FormMessage form = new FormMessage(MsgType.FORME, procId, p1,
-						p2, tailleForm, typeForm, bg, fg);
->>>>>>> 108865d03cf884e3dce5a67b788465fe291a8bf8
 				boolean sent = sendTo(next, form);
 				System.out.println("proc-" + procId
 						+ " : Receive token and need  it,  send form to "
@@ -298,24 +287,17 @@ public class LelannMutualExclusion extends Algorithm {
 				// + " : Receive token and need  it,  send form to "
 				// + getNextProcId() + " on door " + next);
 				notify();
-<<<<<<< HEAD
+
 				
 			}else{
 				
 				System.out.println("proc-"+procId+" : Receive token, forward to "+getNextProcId()+" on door "+next);
 				tm.idProc = getNextProcId();
-=======
-
-			} else {
-
-				System.out.println("proc-" + procId
-						+ " : Receive token, forward to " + getNextProcId()
-						+ " on door " + next);
->>>>>>> 108865d03cf884e3dce5a67b788465fe291a8bf8
 				boolean sent = sendTo(next, tm);
-
 			}
-		} else {
+
+		} 
+		else {
 
 			next = myRouter.getDoorOnMyRoute(tm.idProc);
 			System.out.println("proc-" + procId
@@ -323,19 +305,17 @@ public class LelannMutualExclusion extends Algorithm {
 			boolean sent = sendTo(next, tm);
 		}
 	}
+    
 	// Rule 5 : receive Form
 	synchronized public void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
-<<<<<<< HEAD
 		System.out.println("proc-"+procId+" : Receive form forward  to "+getNextProcId()+" on door "+next);
-=======
 		System.out.println("proc-" + procId + " : Receive form forward  to "
 				+ getNextProcId() + " on door " + next);
 		next = myRouter.getDoorOnMyRoute(getNextProcId());
->>>>>>> 108865d03cf884e3dce5a67b788465fe291a8bf8
 		lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
 		/* I send the form if only the next proc is different of the owner of this form */
-		if(getNextProcId() != form.procId){
+		if(getNextProcId() != form.procId && form.nextProcId != procId){
 			
 			if( getNextProcId() > form.nextProcId ){
 				
@@ -372,8 +352,7 @@ public class LelannMutualExclusion extends Algorithm {
 		return nextProcId;
 	}
 	// Send message Where Is
-	public void sendRouteMessage(	final ExtendRouteMessage mr,
-									final int exceptDoor) {
+	public void sendRouteMessage(	final ExtendRouteMessage mr, final int exceptDoor) {
 
 		for (int i = 0; i < getArity(); i++) {
 
@@ -389,7 +368,6 @@ public class LelannMutualExclusion extends Algorithm {
 	@SuppressWarnings("finally")
 	public Message recoit(final Door d) {
 
-<<<<<<< HEAD
 		Message m = receive(d);
 		return m;
 	}
@@ -406,9 +384,6 @@ public class LelannMutualExclusion extends Algorithm {
 	public FormMessage recoitForme(final Door d) {
 
 		FormMessage sm = (FormMessage) receive(d);
-=======
-		Message sm = receive(d);
->>>>>>> 108865d03cf884e3dce5a67b788465fe291a8bf8
 		return sm;
 	}
 
@@ -453,9 +428,7 @@ public class LelannMutualExclusion extends Algorithm {
 				myRouter.ready++;
 				sendRouteMessage(m, d.getNum());
 			}
-
 		}
-
 	}
 
 	// Display state
