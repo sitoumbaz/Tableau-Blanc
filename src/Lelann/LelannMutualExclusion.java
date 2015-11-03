@@ -308,24 +308,30 @@ public class LelannMutualExclusion extends Algorithm {
 		}
 	}
     
-	// Rule 5 : receive Form
+	// Rule 5 : receive Form && I send the form if only the next proc is different of the owner of the form 
 	synchronized public void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
-		System.out.println("proc-"+procId+" : Receive form forward  to "+getNextProcId()+" on door "+next);
-		System.out.println("proc-" + procId + " : Receive form forward  to "
-				+ getNextProcId() + " on door " + next);
-		next = myRouter.getDoorOnMyRoute(getNextProcId());
-		lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-		/* I send the form if only the next proc is different of the owner of this form */
-		if(getNextProcId() != form.procId && form.nextProcId != procId){
+		
+		if(form.nextProcId == procId){
 			
+			System.out.println("Proc-"+procId+" Receive form of "+form.procId);
+			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
+			next = myRouter.getDoorOnMyRoute(form.nextProcId);
 			if( getNextProcId() > form.nextProcId ){
 				
 				form.nextProcId = getNextProcId();
+				next = myRouter.getDoorOnMyRoute(form.nextProcId);
 			}
+			System.out.println("next is "+next);
+			boolean sent = sendTo(next, form);
+		}
+		else{
+			
 			next = myRouter.getDoorOnMyRoute(form.nextProcId);
 			boolean sent = sendTo(next, form);
 		}
+		
+		
 		
 	}
 
@@ -350,9 +356,9 @@ public class LelannMutualExclusion extends Algorithm {
 
 			nextProcId = 0;
 		}
-
 		return nextProcId;
 	}
+	
 	// Send message Where Is
 	public void sendRouteMessage(	final ExtendRouteMessage mr, final int exceptDoor) {
 
