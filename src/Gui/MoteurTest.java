@@ -5,8 +5,8 @@ import java.util.Scanner;
 
 public class MoteurTest {
 	
-	private final int max = 200;
-	private final int min = 51;
+	private final int max = 250;
+	private final int min = 107;
 	private int choixForme;
 	private Point point1;
 	private Point point2;
@@ -25,7 +25,8 @@ public class MoteurTest {
 		java.util.Random rand = new java.util.Random();
 
 		int choixForme = rand.nextInt((3) + 1);
-		this.setChoixForme(choixForme);
+		setChoixForme(choixForme);
+		
 		int p1x = rand.nextInt((max - min) + 1) + min;
 		int p1y = rand.nextInt((max - min) + 1) + min;
 		Point p1 = new Point(p1x, p1y);
@@ -34,7 +35,7 @@ public class MoteurTest {
 		int p2x = rand.nextInt((p1x + min - p1x - min) + 1) + p1x - min;
 		int p2y = rand.nextInt((p1y + min - p1y - min) + 1) + p1y - min;
 		Point p2 = new Point(p2x, p2y);
-		setPoint1(p2);
+		setPoint2(p2);
 	}
 
 	public Point getPoint1() {

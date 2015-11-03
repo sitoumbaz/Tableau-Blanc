@@ -28,7 +28,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 	// Router
 	public MyRouter myRouter;
-
+	
 	// Tableau blanc
 	private Lanceur lanceur;
 	private Point p1 = null;
@@ -77,6 +77,7 @@ public class LelannMutualExclusion extends Algorithm {
 		myRouter = new MyRouter(getNetSize());
 		myRouter.setDoorToMyRoute(getId(), -2);
 
+		
 		setRoutingTable();
 		// displayState();
 		try {
@@ -123,14 +124,14 @@ public class LelannMutualExclusion extends Algorithm {
 			Thread.sleep( time );
 		    } catch( InterruptedException ie ) {}
 		    
-		    // Try to access critical section
+	    	// Try to access critical section
 		    waitForCritical = true;
 		    askForCritical();
 
 		    // Access critical
 		    waitForCritical = false;
 		    inCritical = true;
-
+		    
 		    //displayState();
 
 		    // Simulate critical resource use
@@ -256,6 +257,7 @@ public class LelannMutualExclusion extends Algorithm {
 			motTest.creerForme();
 			p1 = motTest.getPoint1();
 			p2 = motTest.getPoint2();
+			System.out.println("P1("+p1.getX()+","+p1.getY()+") et P2("+p2.getX()+","+p2.getY()+")");
 			typeForm = motTest.getChoixForme();
 			lanceur.ajouteForme(p1, p2, typeForm);
 			try {
