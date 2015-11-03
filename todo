@@ -2,7 +2,7 @@
 
 Remplacer le wiat(10000) par des acuses de reception pour eviter d'avoir des temps d attente aleatoire
 
-Virer les messages de debug + refaire lanceur en thread + reverifier les constantes (ex color.black ) 
+
 
 Implementer lelann
 
@@ -12,11 +12,7 @@ Modifier tableauBlancUI.java pour pouvoir faire des tests manuel :
 	1) ajouter un bouton "demande de sc"
 	2) ajouter un bouton "liberer sc"
 
-Creer un logger vers un fichier .txt et donc faire que le programme ecrive des messages pertinents ( table de routage, demande de sc, prise de sc, ecrite de form, envoi de forme ) 
-
-Creer type de message forme pour transferer les formes
-
-Dans le type de message token ajouter un destinataire, comme ca si on le passe a un voisin qui n'est pas destinataire il fera le relai
+Ecrire des messages pertinents dans le logger
 
 
 Implementer ricard,
@@ -27,6 +23,15 @@ Faire le squelette du rapport
 
 
 ------------------------------------- FAIT : ---------------------------------------------------------------------------------
+
+Creer un logger vers un fichier .txt et donc faire que le programme ecrive des messages pertinents ( table de routage, demande de sc, prise de sc, ecrite de form, envoi de forme ) 
+
+Creer type de message forme pour transferer les formes
+
+Dans le type de message token ajouter un destinataire, comme ca si on le passe a un voisin qui n'est pas destinataire il fera le relai
+
+Virer les messages de debug + refaire lanceur en thread + reverifier les constantes (ex color.black ) 
+
 
 Faire un moteur de tests :
 	1) definir une random entre 1 et 5 et si le resultat est 1 ou 2 on prend la section critique ( 2 chances sur 5 )
