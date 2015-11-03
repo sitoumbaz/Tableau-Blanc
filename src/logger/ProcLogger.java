@@ -41,8 +41,6 @@ public class ProcLogger {
 
 		logger.log(Level.INFO, mess);
 
-		System.out.println("n°" + procId + " : " + mess);
-
 	}
 
 	public void close() {
