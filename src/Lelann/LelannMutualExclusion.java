@@ -316,7 +316,7 @@ public class LelannMutualExclusion extends Algorithm {
 		if(form.nextProcId == procId){
 		
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			if( getNextProcId() > form.nextProcId )
+			if( getNextProcId() > form.nextProcId &&  getNextProcId() != form.procId)
 			{
 				form.nextProcId = getNextProcId();
 				next = myRouter.getDoorOnMyRoute(form.nextProcId);
@@ -325,6 +325,7 @@ public class LelannMutualExclusion extends Algorithm {
 			else{
 			
 				if(getNextProcId() != form.procId){
+					
 					form.nextProcId = getNextProcId();
 					next = myRouter.getDoorOnMyRoute(form.nextProcId);
 					boolean sent = sendTo(next, form);
