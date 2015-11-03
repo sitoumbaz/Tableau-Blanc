@@ -82,10 +82,9 @@ public class LelannMutualExclusion extends Algorithm {
 		myRouter.setDoorToMyRoute(getId(), -2);
 
 		setRoutingTable();
-		// displayState();
+		// attente que chaque que les messages aient le temps de se propager
 		try {
-			// attendre que chaque proc ait recu le messge de l'autre
-			Thread.sleep(5000);
+			Thread.sleep(2500);
 		} catch (InterruptedException ie) {
 		}
 
@@ -100,10 +99,10 @@ public class LelannMutualExclusion extends Algorithm {
 		// ici le tableau blanc est deja construit
 		// attente que tous les procs aient reçu le message ready
 		// remplacer par des acusés de reception
-		try {
-			Thread.sleep(15000);
-		} catch (InterruptedException ie) {
-		}
+		// try {
+		// Thread.sleep(15000);
+		// } catch (InterruptedException ie) {
+		// }
 
 		// Start token round
 		rr = new ReceptionRules(this);
