@@ -22,7 +22,7 @@ public class ProcLogger {
 		logger = Logger.getLogger("MyLog");
 		new File("log_proc_" + procid).delete();
 		try {
-			fh = new FileHandler("log_proc_" + procid, true);
+			fh = new FileHandler("logs/log_proc_" + procid, true);
 			logger.addHandler(fh);
 			logger.setLevel(Level.ALL);
 			BriefFormatter formatter = new BriefFormatter();
