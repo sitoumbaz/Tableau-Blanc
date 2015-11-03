@@ -257,9 +257,8 @@ public class LelannMutualExclusion extends Algorithm {
 			motTest.creerForme();
 			p1 = motTest.getPoint1();
 			p2 = motTest.getPoint2();
-			System.out.println("P1("+p1.getX()+","+p1.getY()+") et P2("+p2.getX()+","+p2.getY()+")");
 			typeForm = motTest.getChoixForme();
-			lanceur.ajouteForme(p1, p2, typeForm);
+			System.out.println("Proc-"+procId+" : Create form, wait critical section  befor drawing");
 			try {
 				this.wait();
 			} catch (InterruptedException ie) {
@@ -275,6 +274,7 @@ public class LelannMutualExclusion extends Algorithm {
 			next = myRouter.getDoorOnMyRoute(getNextProcId());
 			if (waitForCritical) {
 
+				lanceur.ajouteForme(p1, p2, typeForm);
 				next = myRouter.getDoorOnMyRoute(getNextProcId());
 				token = true;
 				displayState();
@@ -282,12 +282,9 @@ public class LelannMutualExclusion extends Algorithm {
 				Color fg = Color.red;
 				FormMessage form = new FormMessage(MsgType.FORME,procId,getNextProcId(),p1,p2,tailleForm,typeForm,bg,fg);
 				boolean sent = sendTo(next, form);
-				System.out.println("proc-" + procId
-						+ " : Receive token and need  it,  send form to "
-						+ getNextProcId() + " on door " + next);
-				// log.logMsg("proc-" + procId
-				// + " : Receive token and need  it,  send form to "
-				// + getNextProcId() + " on door " + next);
+				System.out.println("Proc-"+procId+" : Receive token, get in critical section, "
+						         + "drawing form and send my form to proc-"+getNextProcId()
+						         + " on door "+next);
 				notify();
 
 				
@@ -316,14 +313,22 @@ public class LelannMutualExclusion extends Algorithm {
 			
 			System.out.println("Proc-"+procId+" Receive form of "+form.procId);
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			next = myRouter.getDoorOnMyRoute(form.nextProcId);
 			if( getNextProcId() > form.nextProcId ){
 				
 				form.nextProcId = getNextProcId();
 				next = myRouter.getDoorOnMyRoute(form.nextProcId);
+				boolean sent = sendTo(next, form);
 			}
-			System.out.println("next is "+next);
-			boolean sent = sendTo(next, form);
+			else{
+				
+				if(getNextProcId() != form.procId){
+					
+					form.nextProcId = getNextProcId();
+					next = myRouter.getDoorOnMyRoute(form.nextProcId);
+					boolean sent = sendTo(next, form);
+				}
+			}
+			
 		}
 		else{
 			
