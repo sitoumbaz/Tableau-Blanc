@@ -41,6 +41,8 @@ public class LelannMutualExclusion extends Algorithm {
 	private Point p2 = null;
 	private float tailleForm;
 	private int typeForm;
+	// Pixel Generator
+	MoteurTest motTest;
 
 	// Token
 	boolean token = false;
@@ -55,8 +57,6 @@ public class LelannMutualExclusion extends Algorithm {
 	boolean waitForCritical = false;
 	boolean inCritical = false;
 
-	// Pixel Generator
-	MoteurTest motTest;
 
 	@Override
 	public String getDescription() {

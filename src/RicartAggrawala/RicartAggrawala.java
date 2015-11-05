@@ -1,8 +1,12 @@
 package RicartAggrawala;
 
+import java.awt.Point;
 import java.util.HashMap;
 
 import logger.ProcLogger;
+import Gui.Lanceur;
+import Gui.MoteurTest;
+import Lelann.MyRouter;
 import Message.MsgType;
 import visidia.simulation.process.algorithm.Algorithm;
 
@@ -27,9 +31,16 @@ public class RicartAggrawala extends Algorithm{
 	 
 	private ProcLogger log = null; /* logger */
 	
-	/*private boolean askCriticalSection = false;
-	private boolean inCriticalSection = false;
-	private boolean endCriticalSection = false;*/
+	public MyRouter myRouter; /*  Router */
+	
+	// Tableau blanc
+	private Lanceur lanceur;
+	private Point p1 = null;
+	private Point p2 = null;
+	private float tailleForm;
+	private int typeForm;
+	// form Generator
+	MoteurTest motTest;
 	
 	@Override
 	public Object clone() {
@@ -43,6 +54,14 @@ public class RicartAggrawala extends Algorithm{
 		Nrel = getArity();
 		procId = getId();
 		log = new ProcLogger(procId,"Ricart");
+		myRouter = new MyRouter(getNetSize());
+		
+		
+		log.logMsg("Proc-"+procId+" I am ready to begin "+ myRouter.ready);
+		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
+		log.logMsg("Proc-"+procId+" I launch the white board named Tableau Blanc Proc"+procId);
+		motTest = new MoteurTest();
+		lanceur.start();
 	}
 	
 	/* Rule 1 : processus ask for critical section */
@@ -54,14 +73,36 @@ public class RicartAggrawala extends Algorithm{
 		RicartAggrawalaMessage ms = new RicartAggrawalaMessage(MsgType.REQ, procId,0,HSC);
 		sendReq(ms,Nrel,-1);
 		
+		motTest.creerForme();
+		p1 = motTest.getPoint1();
+		p2 = motTest.getPoint2();
+		typeForm = motTest.getChoixForme();
+		log.logMsg("Proc-"+procId+" : Create form, wait critical section  befor drawing");
+		
 		while(Nrel != 0){	
 			try {
 				wait();
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
+		
 	}
 	
 	/* Rules 2 : */
+	private synchronized void receiveReq(RicartAggrawalaMessage ms){
+		
+		int door = myRouter.getDoorOnMyRoute(ms.procId);
+		H = Math.max(H, ms.H);
+		if(R && (HSC < ms.H) || ((HSC == ms.H) && this.procId < ms.procId)){
+			
+			X.put(ms.procId,door);
+		}
+		else{
+			
+			RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(MsgType.REL, procId,ms.procId,0);
+			this.sendTo(door, mrel);
+		}
+	}
+	
 	
 	/* Allow to send a broadcast message to a specif number of processus */
 	private synchronized void sendReq(RicartAggrawalaMessage ms, int nbrProc, int exceptDoor){
