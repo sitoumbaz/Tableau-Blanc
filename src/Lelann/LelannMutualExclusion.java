@@ -14,6 +14,9 @@ import Gui.MoteurTest;
 import Listener.ReceptionRules;
 import Message.FormMessage;
 import Message.MsgType;
+import Router.ExtendRouteMessage;
+import Router.MyRouter;
+import Router.RouteMessage;
 
 public class LelannMutualExclusion extends Algorithm {
 
@@ -29,8 +32,8 @@ public class LelannMutualExclusion extends Algorithm {
 	public int speed = 4;
 	public int netSize = 0;
 	public int arity = 0;
-	
-	//just for managin displaying routing table in the log
+
+	// just for managin displaying routing table in the log
 	boolean iAmReady = false;
 	// Router
 	public MyRouter myRouter;
@@ -77,7 +80,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 		procId = getId();
 		nextProcId = getNextProcId();
-		log = new ProcLogger(procId,"Lelann");
+		log = new ProcLogger(procId, "Lelann");
 
 		Random rand = new Random();
 		netSize = getNetSize();
@@ -97,16 +100,16 @@ public class LelannMutualExclusion extends Algorithm {
 		extendRoutingTable();
 		sayIamReady();
 
-		log.logMsg("Proc-"+procId+" I am ready to begin "+ myRouter.ready);
+		log.logMsg("Proc-" + procId + " I am ready to begin " + myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
-		log.logMsg("Proc-"+procId+" I launch the white board named Tableau Blanc Proc"+procId);
+		log.logMsg("Proc-" + procId
+				+ " I launch the white board named Tableau Blanc Proc" + procId);
 		motTest = new MoteurTest();
 		lanceur.start();
-		
-		
+
 		rr = new ReceptionRules(this);
 		rr.start();
-		log.logMsg("Proc-"+procId+" I start my message Listerner");
+		log.logMsg("Proc-" + procId + " I start my message Listerner");
 
 		if (procId == 0) {
 
@@ -114,22 +117,26 @@ public class LelannMutualExclusion extends Algorithm {
 			TokenMessage tm = new TokenMessage(MsgType.TOKEN, nextProcId);
 			next = myRouter.getDoorOnMyRoute(nextProcId);
 			boolean sent = sendTo(next, tm);
-			if(!sent){
-				
-				log.logMsg("Proc-"+procId+" Unable to start process");
+			if (!sent) {
+
+				log.logMsg("Proc-" + procId + " Unable to start process");
 			}
-			log.logMsg("Proc-"+procId+" I start the prcess by sending token to Proc-"+nextProcId+" on door "+next);
-			
+			log.logMsg("Proc-" + procId
+					+ " I start the prcess by sending token to Proc-"
+					+ nextProcId + " on door " + next);
+
 		}
 
 		while (true) {
 
 			// Wait for some time
 			int time = (3 + rand.nextInt(10)) * speed * 1000;
-			log.logMsg("Proc-"+procId+":  wait for " + time);
+			log.logMsg("Proc-" + procId + ":  wait for " + time);
 			try {
 				Thread.sleep(time);
-			} catch (InterruptedException ie) {log.logMsg("Proc-"+procId+" : Error"+ie.getMessage());}
+			} catch (InterruptedException ie) {
+				log.logMsg("Proc-" + procId + " : Error" + ie.getMessage());
+			}
 
 			// Try to access critical section
 			waitForCritical = true;
@@ -145,7 +152,8 @@ public class LelannMutualExclusion extends Algorithm {
 			time = (1 + rand.nextInt(3)) * 1000;
 			try {
 				Thread.sleep(time);
-			} catch (InterruptedException ie) {}
+			} catch (InterruptedException ie) {
+			}
 
 			// Release critical use
 			inCritical = false;
@@ -172,7 +180,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 			Door d = new Door();
 			RouteMessage mr = recoitRoute(d);
-			myRouter.setDoorToMyRoute(mr.procId, d.getNum());
+			myRouter.setDoorToMyRoute(mr.getProcId(), d.getNum());
 			myRouter.complete++;
 			i++;
 		}
@@ -188,8 +196,9 @@ public class LelannMutualExclusion extends Algorithm {
 			// Send my Routing table to my neighbors
 			if (getArity() > 1) {
 
-				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,getId(), procId);
-				mr.routingTable = myRouter.getMyRoute();
+				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,
+						getId(), procId);
+				mr.setRoutingTable(myRouter.getMyRoute());
 				sendRouteMessage(mr, -1);
 			}
 
@@ -204,18 +213,19 @@ public class LelannMutualExclusion extends Algorithm {
 	// ready like me
 	synchronized void sayIamReady() {
 
-		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),procId);
-		mr.routingTable = myRouter.getMyRoute();
+		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),
+				procId);
+		mr.setRoutingTable(myRouter.getMyRoute());
 		sendRouteMessage(mr, -1);
 
-		log.logMsg("Proc-"+procId+" : I am Ready");
+		log.logMsg("Proc-" + procId + " : I am Ready");
 		// Stay awaiting while my routing table is not complete
 		while (myRouter.ready < getNetSize()) {
 
 			Door d = new Door();
 			recoitExtendRouteMessage(d);
 		}
-		iAmReady=true;
+		iAmReady = true;
 		displayState();
 	}
 
@@ -228,7 +238,8 @@ public class LelannMutualExclusion extends Algorithm {
 			p1 = motTest.getPoint1();
 			p2 = motTest.getPoint2();
 			typeForm = motTest.getChoixForme();
-			log.logMsg("Proc-"+procId+" : Create form, wait critical section  befor drawing");
+			log.logMsg("Proc-" + procId
+					+ " : Create form, wait critical section  befor drawing");
 			try {
 				this.wait();
 			} catch (InterruptedException ie) {
@@ -252,14 +263,16 @@ public class LelannMutualExclusion extends Algorithm {
 						getNextProcId(), p1, p2, tailleForm, typeForm, bg, fg);
 				boolean sent = sendTo(next, form);
 
-				log.logMsg("Proc-"+procId+" : Receive token, get in critical section, "
-						         + "drawing form and send my form to proc-"+getNextProcId()
-						         + " on door "+next);
+				log.logMsg("Proc-" + procId
+						+ " : Receive token, get in critical section, "
+						+ "drawing form and send my form to proc-"
+						+ getNextProcId() + " on door " + next);
 				notify();
 
 			} else {
 
-				log.logMsg("proc-" + procId + " : Receive token, do not need it, I forward it to "
+				log.logMsg("proc-" + procId
+						+ " : Receive token, do not need it, I forward it to "
 						+ getNextProcId() + " on door " + next);
 
 				tm.idProc = getNextProcId();
@@ -274,36 +287,35 @@ public class LelannMutualExclusion extends Algorithm {
 			boolean sent = sendTo(next, tm);
 		}
 	}
-    
-	// Rule 5 : receive Form && I send the form if only the next proc is different of the owner of the form 
+
+	// Rule 5 : receive Form && I send the form if only the next proc is
+	// different of the owner of the form
 	synchronized public void receiveFormMessage(final FormMessage form) {
-	// TODO Auto-generated method stub
-		log.logMsg("Proc-"+procId+": Receive form of "+form.procId);
-		if(form.nextProcId == procId){
-		
+		// TODO Auto-generated method stub
+		log.logMsg("Proc-" + procId + ": Receive form of " + form.procId);
+		if (form.nextProcId == procId) {
+
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			if( getNextProcId() > form.nextProcId &&  getNextProcId() != form.procId)
-			{
+			if (getNextProcId() > form.nextProcId
+					&& getNextProcId() != form.procId) {
 				form.nextProcId = getNextProcId();
 				next = myRouter.getDoorOnMyRoute(form.nextProcId);
 				boolean sent = sendTo(next, form);
-			}
-			else{
-			
-				if(getNextProcId() != form.procId){
-					
+			} else {
+
+				if (getNextProcId() != form.procId) {
+
 					form.nextProcId = getNextProcId();
 					next = myRouter.getDoorOnMyRoute(form.nextProcId);
 					boolean sent = sendTo(next, form);
 				}
 			}
-		}
-		else{
-			
+		} else {
+
 			next = myRouter.getDoorOnMyRoute(form.nextProcId);
 			boolean sent = sendTo(next, form);
 		}
-	
+
 	}
 
 	// Rule 6 :
@@ -329,7 +341,7 @@ public class LelannMutualExclusion extends Algorithm {
 		}
 		return nextProcId;
 	}
-	
+
 	// Send message Where Is
 	public void sendRouteMessage(	final ExtendRouteMessage mr,
 									final int exceptDoor) {
@@ -376,12 +388,12 @@ public class LelannMutualExclusion extends Algorithm {
 	public void recoitExtendRouteMessage(final Door d) {
 
 		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
-		if (m.type == MsgType.TABLE) {
+		if (m.getMsgType() == MsgType.TABLE) {
 
 			for (int i = 0; i < getNetSize(); i++) {
 
 				if (myRouter.getDoorOnMyRoute(i) == -1
-						&& m.routingTable[i] > -1) {
+						&& m.getRoutingTable()[i] > -1) {
 
 					myRouter.setDoorToMyRoute(i, d.getNum());
 					myRouter.complete++;
@@ -389,20 +401,20 @@ public class LelannMutualExclusion extends Algorithm {
 			}
 		}
 
-		if (m.type == MsgType.READY) {
+		if (m.getMsgType() == MsgType.READY) {
 
 			for (int i = 0; i < getNetSize(); i++) {
 
 				if (myRouter.getDoorOnMyRoute(i) == -1
-						&& m.routingTable[i] > -1) {
+						&& m.getRoutingTable()[i] > -1) {
 
 					myRouter.setDoorToMyRoute(i, d.getNum());
 					myRouter.complete++;
 				}
 			}
-			if (!myRouter.getStateOfProc(m.myProcId)) {
+			if (!myRouter.getStateOfProc(m.getMyProcId())) {
 
-				myRouter.ProcBecomeReady(m.myProcId, true);
+				myRouter.ProcBecomeReady(m.getMyProcId(), true);
 				myRouter.ready++;
 				sendRouteMessage(m, d.getNum());
 			}
@@ -421,17 +433,18 @@ public class LelannMutualExclusion extends Algorithm {
 		else
 			state = state + "-- SLEEPING --\n";
 
-		if(myRouter.ready == this.getNetSize()){
-			
+		if (myRouter.ready == this.getNetSize()) {
+
 			iAmReady = false;
 			state = state + "#### Route processus " + getId() + " ######\n";
 			for (int i = 0; i < getNetSize(); i++) {
 
-				state = state + "Door " + myRouter.getDoorOnMyRoute(i)+ " connected to procId-" + i + "\n";
+				state = state + "Door " + myRouter.getDoorOnMyRoute(i)
+						+ " connected to procId-" + i + "\n";
 			}
-			
+
 		}
-		log.logMsg("procId-"+procId+": "+state);
+		log.logMsg("procId-" + procId + ": " + state);
 	}
 
 }
