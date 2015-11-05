@@ -1,10 +1,13 @@
 package RicartAggrawala;
 
+import java.awt.Point;
 import java.util.HashMap;
 
 import logger.ProcLogger;
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
+import Gui.Lanceur;
+import Gui.MoteurTest;
 import Message.MsgType;
 import Router.ExtendRouteMessage;
 import Router.MyRouter;
@@ -39,7 +42,16 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	private int procId = 0; // My processus Id
 
 	private ProcLogger log = null; /* logger */
-
+	
+	// Tableau blanc
+	private Lanceur lanceur;
+	private Point p1 = null;
+	private Point p2 = null;
+	private float tailleForm;
+	private int typeForm;
+	// form Generator
+	MoteurTest motTest;
+		
 	/*
 	 * private boolean askCriticalSection = false; private boolean
 	 * inCriticalSection = false; private boolean endCriticalSection = false;
@@ -61,6 +73,12 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		myRouter = new MyRouter(getNetSize());
 		myRouter.setDoorToMyRoute(getId(), -2);
 		log = new ProcLogger(procId, "Ricart");
+		
+		log.logMsg("Proc-"+procId+" I am ready to begin "+ myRouter.ready);
+		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
+		log.logMsg("Proc-"+procId+" I launch the white board named Tableau Blanc Proc"+procId);
+		motTest = new MoteurTest();
+		lanceur.start();
 	}
 	// --------------------
 	// Rules
@@ -188,59 +206,71 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	}
 
 	/* Rule 1 : processus ask for critical section */
-	private synchronized void askCriticalSection() {
-
+	private synchronized  void askCriticalSection(){
+		
 		R = true;
 		HSC = H++;
 		Nrel = getArity();
-		RicartAggrawalaMessage ms = new RicartAggrawalaMessage(MsgType.REQ,
-				procId, 0, HSC);
-		sendReq(ms, Nrel, -1);
-
-		while (Nrel != 0) {
+		RicartAggrawalaMessage ms = new RicartAggrawalaMessage(MsgType.REQ, procId,0,HSC);
+		sendReq(ms,Nrel,-1);
+		
+		motTest.creerForme();
+		p1 = motTest.getPoint1();
+		p2 = motTest.getPoint2();
+		typeForm = motTest.getChoixForme();
+		log.logMsg("Proc-"+procId+" : Create form, wait critical section  befor drawing");
+		
+		while(Nrel != 0){	
 			try {
 				wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			} catch (InterruptedException e) {e.printStackTrace();}
 		}
+		
 	}
-
+	
 	/* Rules 2 : */
-
-	/* Allow to send a broadcast message to a specif number of processus */
-	private synchronized void sendReq(	final RicartAggrawalaMessage ms,
-										final int nbrProc,
-										final int exceptDoor) {
-
-		for (int i = 0; i < nbrProc; i++) {
-
-			if (i != exceptDoor) {
-
-				boolean send = sendTo(i, ms);
-			}
+	private synchronized void receiveReq(RicartAggrawalaMessage ms){
+		
+		int door = myRouter.getDoorOnMyRoute(ms.procId);
+		H = Math.max(H, ms.H);
+		if(R && (HSC < ms.H) || ((HSC == ms.H) && this.procId < ms.procId)){
+			
+			X.put(ms.procId,door);
 		}
-	}
-
-	/* Rule 3 : */
-	/* le processus reçoit le message rel() de j */
-	private synchronized void receieveRel() {
-		Nrel--;
-		log.logMsg("Message rel reçu");
+		else{
+			
+			RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(MsgType.REL, procId,ms.procId,0);
+			this.sendTo(door, mrel);
+		}
 	}
 
 	/* Rule 4 */
 	private synchronized void libereSC() {
 
 		R = false;
-		for (int i = 0; i < nbrProc; i++) {
+		for (int i = 0; i < this.getNetSize(); i++) {
 
-			if (i != exceptDoor) {
-
-				boolean send = sendTo(i, ms);
+			if(X.containsKey(i)){
+				
+				RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(MsgType.REL, procId,0,0);
+				mrel.procRecipient = i;
+				int door = this.myRouter.getDoorOnMyRoute(i);
+				this.sendTo(door, mrel);
+				X.remove(i);
 			}
 		}
-
+	}
+	
+	/* Allow to send a broadcast message to a specif number of processus */
+	private synchronized void sendReq(RicartAggrawalaMessage ms, int nbrProc, int exceptDoor){
+		
+		for(int i=0; i<nbrProc; i++){
+			
+			if(i != exceptDoor){
+				
+				boolean send = sendTo(i, ms);	
+			}
+		}
 	}
 
 	// Display state
@@ -248,13 +278,13 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 
 		String state = new String("\n");
 		state = state + "--------------------------------------\n";
-		if (inCritical)
+		/*if (inCritical)
 			state = state + "** ACCESS CRITICAL **\n";
 		else if (waitForCritical)
 			state = state + "* WAIT FOR *\n";
 		else
 			state = state + "-- SLEEPING --\n";
-
+		*/
 		if (myRouter.ready == this.getNetSize()) {
 
 			iAmReady = false;
