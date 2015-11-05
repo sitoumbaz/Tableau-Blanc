@@ -11,6 +11,7 @@ import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
+import Listener.ReceptionRules;
 
 public class LelannMutualExclusion extends Algorithm {
 
@@ -56,7 +57,7 @@ public class LelannMutualExclusion extends Algorithm {
 	@Override
 	public String getDescription() {
 
-		return ("Lelann Algorithm for Mutual Exclusion");
+		return ("Lelann Algorithm for Mutual Exclusion on any type of network");
 	}
 
 	@Override
@@ -269,7 +270,7 @@ public class LelannMutualExclusion extends Algorithm {
 		}
 	}
 	// Rule 4 : receive TOKEN
-	synchronized void receiveTOKEN(final TokenMessage tm) {
+	public synchronized void receiveTOKEN(final TokenMessage tm) {
 
 		if (tm.idProc == procId) {
 			next = myRouter.getDoorOnMyRoute(getNextProcId());

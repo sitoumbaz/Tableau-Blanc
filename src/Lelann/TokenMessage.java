@@ -4,7 +4,7 @@ import visidia.simulation.process.messages.Message;
 
 public class TokenMessage extends Message {
     
-    MsgType type;
+    public MsgType type;
     int idProc;
     
     public TokenMessage(MsgType t, int proc) {
