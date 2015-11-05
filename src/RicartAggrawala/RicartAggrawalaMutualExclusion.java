@@ -22,6 +22,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 
 	// Router
 	public MyRouter myRouter;
+	public int next = 0;
 
 	// just for managin displaying routing table in the log
 	boolean iAmReady = false;
@@ -242,6 +243,37 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(MsgType.REL, procId,ms.procId,0);
 			this.sendTo(door, mrel);
 		}
+<<<<<<< HEAD
+=======
+	}
+
+	/* Rule 3 : */
+	/* le processus reçoit le message rel() de j */
+	private synchronized void receieveRel(final RicartAggrawalaMessage rm) {
+
+		if (rm.procRecipient == procId) {
+			Nrel--;
+			log.logMsg("Message rel reçu");
+		} else {
+			log.logMsg("proc-" + procId
+					+ " : Receive token, do not need it, I forward it to "
+					+ getNextProcId() + " on door " + next);
+
+			rm.procRecipient = getNextProcId();
+			boolean sent = sendTo(next, rm);
+		}
+	}
+
+	// Determine the next proc id
+	public int getNextProcId() {
+
+		int nextProcId = procId + 1;
+		if (getNetSize() == procId + 1) {
+
+			nextProcId = 0;
+		}
+		return nextProcId;
+>>>>>>> 4d288c091b0e72bf7c50a9b368a38e611f878ba9
 	}
 
 	/* Rule 4 */
