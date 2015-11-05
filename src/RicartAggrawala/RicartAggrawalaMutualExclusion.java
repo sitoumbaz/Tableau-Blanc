@@ -243,8 +243,6 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(MsgType.REL, procId,ms.procId,0);
 			this.sendTo(door, mrel);
 		}
-<<<<<<< HEAD
-=======
 	}
 
 	/* Rule 3 : */
@@ -255,11 +253,10 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			Nrel--;
 			log.logMsg("Message rel reçu");
 		} else {
+			next = this.myRouter.getDoorOnMyRoute(rm.procRecipient);
 			log.logMsg("proc-" + procId
 					+ " : Receive token, do not need it, I forward it to "
-					+ getNextProcId() + " on door " + next);
-
-			rm.procRecipient = getNextProcId();
+					+ rm.procRecipient + " on door " + next);
 			boolean sent = sendTo(next, rm);
 		}
 	}
@@ -273,7 +270,6 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			nextProcId = 0;
 		}
 		return nextProcId;
->>>>>>> 4d288c091b0e72bf7c50a9b368a38e611f878ba9
 	}
 
 	/* Rule 4 */
