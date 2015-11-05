@@ -16,13 +16,14 @@ public class ProcLogger {
 
 	Logger logger;
 
-	public ProcLogger(final int procid) {
+	public ProcLogger(final int procid, final String algo) {
 		this.procId = procid;
 
 		logger = Logger.getLogger("MyLog");
-		new File("log_proc_" + procid).delete();
+		String logFile = algo+"_log_proc_"+procid;
+		new File(logFile).delete();
 		try {
-			fh = new FileHandler("logs/log_proc_" + procid, true);
+			fh = new FileHandler("logs/"+logFile, true);
 			logger.addHandler(fh);
 			logger.setLevel(Level.ALL);
 			BriefFormatter formatter = new BriefFormatter();

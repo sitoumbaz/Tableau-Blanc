@@ -1,4 +1,4 @@
-package Lelann;
+package Message;
 
 import java.awt.Color;
 import java.awt.Point;
@@ -7,15 +7,15 @@ import visidia.simulation.process.messages.Message;
 
 public class FormMessage extends Message {
     
-    MsgType type;
-    int procId;
-    int nextProcId;
-    Point point1;
-    Point point2;
-    float tailleForm;
-    Color bg;
-    Color fg;
-    int typeForm;
+    public MsgType type;
+    public int procId;
+    public int nextProcId;
+    public Point point1;
+    public Point point2;
+    public float tailleForm;
+    public Color bg;
+    public Color fg;
+    public int typeForm;
     
     
     public FormMessage(MsgType t, int id, int idNext, Point p1, Point p2, float taille, int type_form, Color b, Color f) {

@@ -12,6 +12,8 @@ import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
 import Listener.ReceptionRules;
+import Message.FormMessage;
+import Message.MsgType;
 
 public class LelannMutualExclusion extends Algorithm {
 
@@ -72,7 +74,7 @@ public class LelannMutualExclusion extends Algorithm {
 	public void init() {
 
 		procId = getId();
-		log = new ProcLogger(procId);
+		log = new ProcLogger(procId,"Lelann");
 
 		Random rand = new Random();
 		netSize = getNetSize();

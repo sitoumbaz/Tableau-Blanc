@@ -1,9 +1,9 @@
 package Listener;
 
 import Lelann.ExtendRouteMessage;
-import Lelann.FormMessage;
 import Lelann.LelannMutualExclusion;
 import Lelann.TokenMessage;
+import Message.FormMessage;
 import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
 

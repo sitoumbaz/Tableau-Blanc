@@ -1,6 +1,7 @@
 package Lelann;
 
 
+import Message.MsgType;
 import visidia.simulation.process.messages.Message;
 
 public class RouteMessage extends Message {

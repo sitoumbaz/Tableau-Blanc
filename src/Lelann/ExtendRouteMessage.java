@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import Message.MsgType;
 import visidia.simulation.process.messages.Message;
 
 public class ExtendRouteMessage extends Message {
@@ -37,20 +38,13 @@ public class ExtendRouteMessage extends Message {
     public String toString() {
     	
     	String r = "";
-    	if(getMsgType().equals(MsgType.HEREIS)){
-    		
-    		r = "HEREIS("+myProcId+","+ProcIdToFind+")";
-    	}
-    	else if(getMsgType().equals(MsgType.TABLE)){
+    	if(getMsgType().equals(MsgType.TABLE)){
     		
     		r = "TABLE("+myProcId+","+ProcIdToFind+")";
     	}
-        else{
-        	
-        	if(getMsgType().equals(MsgType.READY)){
-        		
-        		r = "READY("+myProcId+","+ProcIdToFind+")";
-        	}
+    	if(getMsgType().equals(MsgType.READY)){
+    		
+    		r = "READY("+myProcId+","+ProcIdToFind+")";
     	}
     	
 
