@@ -51,7 +51,7 @@ public class RicartAggrawala extends Algorithm{
 		R = true;
 		HSC = H++;
 		Nrel = getArity();
-		RicartAggrawalaMessage ms = new RicartAggrawalaMessage(MsgType.REQ, procId,0);
+		RicartAggrawalaMessage ms = new RicartAggrawalaMessage(MsgType.REQ, procId,0,HSC);
 		sendReq(ms,Nrel,-1);
 		
 		while(Nrel != 0){	

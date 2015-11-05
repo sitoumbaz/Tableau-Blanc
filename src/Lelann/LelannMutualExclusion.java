@@ -29,7 +29,9 @@ public class LelannMutualExclusion extends Algorithm {
 	public int speed = 4;
 	public int netSize = 0;
 	public int arity = 0;
-
+	
+	//just for managin displaying routing table in the log
+	boolean iAmReady = false;
 	// Router
 	public MyRouter myRouter;
 
@@ -74,6 +76,7 @@ public class LelannMutualExclusion extends Algorithm {
 	public void init() {
 
 		procId = getId();
+		nextProcId = getNextProcId();
 		log = new ProcLogger(procId,"Lelann");
 
 		Random rand = new Random();
@@ -94,40 +97,39 @@ public class LelannMutualExclusion extends Algorithm {
 		extendRoutingTable();
 		sayIamReady();
 
-		log.logMsg("Ready(" + getId() + ") = " + myRouter.ready);
+		log.logMsg("Proc-"+procId+" I am ready to begin "+ myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
+		log.logMsg("Proc-"+procId+" I launch the white board named Tableau Blanc Proc"+procId);
 		motTest = new MoteurTest();
 		lanceur.start();
-
-		// ici le tableau blanc est deja construit
-		// attente que tous les procs aient reçu le message ready
-		// remplacer par des acusés de reception
-		// try {
-		// Thread.sleep(15000);
-		// } catch (InterruptedException ie) {
-		// }
-
-		// Start token round
+		
+		
 		rr = new ReceptionRules(this);
 		rr.start();
+		log.logMsg("Proc-"+procId+" I start my message Listerner");
 
 		if (procId == 0) {
 
 			token = false;
-			TokenMessage tm = new TokenMessage(MsgType.TOKEN, getNextProcId());
-			next = myRouter.getDoorOnMyRoute(procId + 1);
+			TokenMessage tm = new TokenMessage(MsgType.TOKEN, nextProcId);
+			next = myRouter.getDoorOnMyRoute(nextProcId);
 			boolean sent = sendTo(next, tm);
+			if(!sent){
+				
+				log.logMsg("Proc-"+procId+" Unable to start process");
+			}
+			log.logMsg("Proc-"+procId+" I start the prcess by sending token to Proc-"+nextProcId+" on door "+next);
+			
 		}
 
 		while (true) {
 
 			// Wait for some time
 			int time = (3 + rand.nextInt(10)) * speed * 1000;
-			log.logMsg("Process " + procId + " wait for " + time);
+			log.logMsg("Proc-"+procId+":  wait for " + time);
 			try {
 				Thread.sleep(time);
-			} catch (InterruptedException ie) {
-			}
+			} catch (InterruptedException ie) {log.logMsg("Proc-"+procId+" : Error"+ie.getMessage());}
 
 			// Try to access critical section
 			waitForCritical = true;
@@ -141,50 +143,13 @@ public class LelannMutualExclusion extends Algorithm {
 
 			// Simulate critical resource use
 			time = (1 + rand.nextInt(3)) * 1000;
-			log.logMsg("Process " + procId + " enter SC " + time);
 			try {
 				Thread.sleep(time);
-			} catch (InterruptedException ie) {
-			}
-			log.logMsg("Process " + procId + " exit SC ");
+			} catch (InterruptedException ie) {}
 
 			// Release critical use
 			inCritical = false;
 			endCriticalUse();
-
-			while (true) {
-
-				// attente avant la prochaine demande de section critique
-				time = (3 + rand.nextInt(10)) * speed * 1000;
-				log.logMsg("Wait for " + time);
-				try {
-					Thread.sleep(time);
-				} catch (InterruptedException ie) {
-				}
-
-				// Try to access critical section
-				waitForCritical = true;
-				askForCritical();
-
-				// Access critical
-				waitForCritical = false;
-				inCritical = true;
-
-				displayState();
-
-				// Simulate critical resource use
-				time = (1 + rand.nextInt(3)) * 1000;
-				log.logMsg("Enter SC " + time);
-				try {
-					Thread.sleep(time);
-				} catch (InterruptedException ie) {
-				}
-				log.logMsg("Exit SC");
-
-				// Release critical use
-				inCritical = false;
-				endCriticalUse();
-			}
 
 		}
 
@@ -223,8 +188,7 @@ public class LelannMutualExclusion extends Algorithm {
 			// Send my Routing table to my neighbors
 			if (getArity() > 1) {
 
-				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,
-						getId(), procId);
+				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,getId(), procId);
 				mr.routingTable = myRouter.getMyRoute();
 				sendRouteMessage(mr, -1);
 			}
@@ -240,19 +204,19 @@ public class LelannMutualExclusion extends Algorithm {
 	// ready like me
 	synchronized void sayIamReady() {
 
-		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),
-				procId);
+		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),procId);
 		mr.routingTable = myRouter.getMyRoute();
 		sendRouteMessage(mr, -1);
 
-		log.logMsg("myRouter.complete(" + getId() + ") = " + myRouter.complete);
+		log.logMsg("Proc-"+procId+" : I am Ready");
 		// Stay awaiting while my routing table is not complete
 		while (myRouter.ready < getNetSize()) {
 
 			Door d = new Door();
 			recoitExtendRouteMessage(d);
 		}
-
+		iAmReady=true;
+		displayState();
 	}
 
 	// Rule 3 : ask for critical section
@@ -264,7 +228,7 @@ public class LelannMutualExclusion extends Algorithm {
 			p1 = motTest.getPoint1();
 			p2 = motTest.getPoint2();
 			typeForm = motTest.getChoixForme();
-			System.out.println("Proc-"+procId+" : Create form, wait critical section  befor drawing");
+			log.logMsg("Proc-"+procId+" : Create form, wait critical section  befor drawing");
 			try {
 				this.wait();
 			} catch (InterruptedException ie) {
@@ -295,7 +259,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 			} else {
 
-				log.logMsg("proc-" + procId + " : Receive token, forward to "
+				log.logMsg("proc-" + procId + " : Receive token, do not need it, I forward it to "
 						+ getNextProcId() + " on door " + next);
 
 				tm.idProc = getNextProcId();
@@ -314,7 +278,7 @@ public class LelannMutualExclusion extends Algorithm {
 	// Rule 5 : receive Form && I send the form if only the next proc is different of the owner of the form 
 	synchronized public void receiveFormMessage(final FormMessage form) {
 	// TODO Auto-generated method stub
-		log.logMsg("Proc-"+procId+" Receive form of "+form.procId);
+		log.logMsg("Proc-"+procId+": Receive form of "+form.procId);
 		if(form.nextProcId == procId){
 		
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
@@ -457,17 +421,17 @@ public class LelannMutualExclusion extends Algorithm {
 		else
 			state = state + "-- SLEEPING --\n";
 
-		state = state + "#### Route processus " + getId() + " ######\n";
-		for (int i = 0; i < getNetSize(); i++) {
+		if(myRouter.ready == this.getNetSize()){
+			
+			iAmReady = false;
+			state = state + "#### Route processus " + getId() + " ######\n";
+			for (int i = 0; i < getNetSize(); i++) {
 
-			// if(myRouter.getDoorOnMyRoute(i) > -1){
-
-			state = state + "porte " + myRouter.getDoorOnMyRoute(i)
-					+ " connectee au proc " + i + "\n";
-			// }
+				state = state + "Door " + myRouter.getDoorOnMyRoute(i)+ " connected to procId-" + i + "\n";
+			}
+			
 		}
-
-		log.logMsg(state);
+		log.logMsg("procId-"+procId+": "+state);
 	}
 
 }

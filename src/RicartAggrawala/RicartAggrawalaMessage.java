@@ -13,12 +13,14 @@ public class RicartAggrawalaMessage extends Message {
 	MsgType type;
     int procId;
     int procRecipient;
+    int H;
     
-    public RicartAggrawalaMessage(MsgType t, int id1, int id2) {
+    public RicartAggrawalaMessage(MsgType t, int id1, int id2, int h) {
     	
 		type = t;
 		procId = id1;
 		procRecipient = id2;
+		H = h;
 	
     }
 
@@ -26,7 +28,7 @@ public class RicartAggrawalaMessage extends Message {
     
     @Override
     public Message clone() {
-    	return new RicartAggrawalaMessage(MsgType.REQ, procId,procRecipient);
+    	return new RicartAggrawalaMessage(MsgType.REQ, procId,procRecipient, H);
     }
     
     @Override 
