@@ -20,6 +20,9 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	// Router
 	public MyRouter myRouter;
 
+	// just for managin displaying routing table in the log
+	boolean iAmReady = false;
+
 	private int H = 0; /* estampille locale */
 	private int HSC = 0; /* estampille de demande de section critique */
 	private boolean R = false; /*
@@ -63,7 +66,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	// Rules
 	// -------------------
 
-	// Rule 0 : tell to all my neighbor where I am
+	// Rule 0.1 : tell to all my neighbor where I am
 	synchronized void setRoutingTable() {
 
 		for (int i = 0; i < getArity(); i++) {
@@ -91,7 +94,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		return rm;
 	}
 
-	// Rule 1 : I need to extend my routing table
+	// Rule 0.2 : I need to extend my routing table
 	synchronized void extendRoutingTable() {
 
 		// Stay awaiting while my routing table is not complete
@@ -164,7 +167,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		}
 	}
 
-	// Rule 2 : My routing table is complete and I'am waiting other proc to be
+	// Rule 0.3 : My routing table is complete and I'am waiting other proc to be
 	// ready like me
 	synchronized void sayIamReady() {
 
@@ -225,6 +228,8 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		Nrel--;
 		log.logMsg("Message rel reçu");
 	}
+
+	/* Rule 4 */
 	private synchronized void libereSC() {
 
 		R = false;
@@ -236,5 +241,31 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			}
 		}
 
+	}
+
+	// Display state
+	void displayState() {
+
+		String state = new String("\n");
+		state = state + "--------------------------------------\n";
+		if (inCritical)
+			state = state + "** ACCESS CRITICAL **\n";
+		else if (waitForCritical)
+			state = state + "* WAIT FOR *\n";
+		else
+			state = state + "-- SLEEPING --\n";
+
+		if (myRouter.ready == this.getNetSize()) {
+
+			iAmReady = false;
+			state = state + "#### Route processus " + getId() + " ######\n";
+			for (int i = 0; i < getNetSize(); i++) {
+
+				state = state + "Door " + myRouter.getDoorOnMyRoute(i)
+						+ " connected to procId-" + i + "\n";
+			}
+
+		}
+		log.logMsg("procId-" + procId + ": " + state);
 	}
 }
