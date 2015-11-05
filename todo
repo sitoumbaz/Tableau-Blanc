@@ -1,25 +1,17 @@
 --------------------------------------  A FAIRE :  ----------------------------------------------------------------------------- 
 
-Remplacer le wiat(10000) par des acuses de reception pour eviter d'avoir des temps d attente aleatoire
-
-
-
-Implementer lelann
-
-Tester le moteur de tests
-	
-Modifier tableauBlancUI.java pour pouvoir faire des tests manuel :
-	1) ajouter un bouton "demande de sc"
-	2) ajouter un bouton "liberer sc"
-
 Ecrire des messages pertinents dans le logger
-
 
 Implementer ricard,
 
 Implementer le dernier.
 
 Faire le squelette du rapport
+
+Modifier tableauBlancUI.java pour pouvoir faire des tests manuel :
+	1) ajouter un bouton "demande de sc"
+	2) ajouter un bouton "liberer sc"
+
 
 
 ------------------------------------- FAIT : ---------------------------------------------------------------------------------
@@ -32,6 +24,11 @@ Dans le type de message token ajouter un destinataire, comme ca si on le passe a
 
 Virer les messages de debug + refaire lanceur en thread + reverifier les constantes (ex color.black ) 
 
+Remplacer le wiat(10000) par des acuses de reception pour eviter d'avoir des temps d attente aleatoire
+
+Implementer lelann
+
+Tester le moteur de tests
 
 Faire un moteur de tests :
 	1) definir une random entre 1 et 5 et si le resultat est 1 ou 2 on prend la section critique ( 2 chances sur 5 )
