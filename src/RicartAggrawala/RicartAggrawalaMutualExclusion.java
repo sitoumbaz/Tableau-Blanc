@@ -1,13 +1,17 @@
 package RicartAggrawala;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.util.HashMap;
 
 import logger.ProcLogger;
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
+import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
+import Listener.MessageListener;
+import Message.FormMessage;
 import Message.MsgType;
 import Router.ExtendRouteMessage;
 import Router.MyRouter;
@@ -40,7 +44,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	private int Nrel = 0; // Nombre des REL attendu
 	private int V = 0; // Nombre des voisins du processus
 
-	private int procId = 0; // My processus Id
+	public int procId = 0; // My processus Id
 
 	private ProcLogger log = null; /* logger */
 	
@@ -50,18 +54,16 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	private Point p2 = null;
 	private float tailleForm;
 	private int typeForm;
+	
 	// form Generator
 	MoteurTest motTest;
-		
-	/*
-	 * private boolean askCriticalSection = false; private boolean
-	 * inCriticalSection = false; private boolean endCriticalSection = false;
-	 */
+	
+	MessageListener messageListener = null;
 
 	@Override
 	public Object clone() {
 		// TODO Auto-generated method stub
-		return null;
+		return new RicartAggrawalaMutualExclusion();
 	}
 
 	@Override
@@ -75,11 +77,31 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		myRouter.setDoorToMyRoute(getId(), -2);
 		log = new ProcLogger(procId, "Ricart");
 		
+		/* Begin setting up route */
+		
+		setRoutingTable();
+		// attente que chaque que les messages aient le temps de se propager
+		try {
+			Thread.sleep(2500);
+		} catch (InterruptedException ie) {
+		}
+
+		extendRoutingTable();
+		sayIamReady();
+		
+		/* End setting up route */
+		
+		
 		log.logMsg("Proc-"+procId+" I am ready to begin "+ myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
 		log.logMsg("Proc-"+procId+" I launch the white board named Tableau Blanc Proc"+procId);
 		motTest = new MoteurTest();
 		lanceur.start();
+		
+		
+		messageListener = new MessageListener(this);
+		messageListener.start();
+		log.logMsg("Proc-" + procId + " I start my message Listerner");
 	}
 	// --------------------
 	// Rules
@@ -173,8 +195,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	}
 
 	// Send message Where Is
-	public void sendRouteMessage(	final ExtendRouteMessage mr,
-									final int exceptDoor) {
+	public void sendRouteMessage(	final ExtendRouteMessage mr,final int exceptDoor) {
 
 		for (int i = 0; i < getArity(); i++) {
 
@@ -230,7 +251,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	}
 	
 	/* Rules 2 : */
-	private synchronized void receiveReq(RicartAggrawalaMessage ms){
+	public synchronized void receiveReq(RicartAggrawalaMessage ms){
 		
 		int door = myRouter.getDoorOnMyRoute(ms.procId);
 		H = Math.max(H, ms.H);
@@ -247,12 +268,22 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 
 	/* Rule 3 : */
 	/* le processus reçoit le message rel() de j */
-	private synchronized void receieveRel(final RicartAggrawalaMessage rm) {
+	public synchronized void receiveRel(final RicartAggrawalaMessage rm) {
 
 		if (rm.procRecipient == procId) {
 			Nrel--;
-			log.logMsg("Message rel reçu");
+			log.logMsg("Proc"+procId+" Receive "+(getArity() - Nrel)+" REL");
+			if(Nrel == 0){
+				
+				displayState();
+				Color bg = Color.blue;
+				Color fg = Color.red;
+				FormMessage form = new FormMessage(MsgType.FORME, procId,0, p1, p2, tailleForm, typeForm, bg, fg);
+				boolean sent = sendTo(next, form);
+				notify();
+			}
 		} else {
+			
 			next = this.myRouter.getDoorOnMyRoute(rm.procRecipient);
 			log.logMsg("proc-" + procId
 					+ " : Receive token, do not need it, I forward it to "
@@ -260,16 +291,12 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			boolean sent = sendTo(next, rm);
 		}
 	}
-
-	// Determine the next proc id
-	public int getNextProcId() {
-
-		int nextProcId = procId + 1;
-		if (getNetSize() == procId + 1) {
-
-			nextProcId = 0;
-		}
-		return nextProcId;
+	
+	/* Rule 4*/
+	/* Le processus entre en section critique */
+	private synchronized void getInCriticalSection(){
+		
+		lanceur.ajouteForme(p1, p2, typeForm);
 	}
 
 	/* Rule 4 */
@@ -300,7 +327,44 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			}
 		}
 	}
+	
+	/* Allow to send a broadcast message to a specif number of processus */
+	private synchronized void sendForm(FormMessage ms, int nbrProc, int exceptDoor){
+		
+		for(int i=0; i<nbrProc; i++){
+			
+			if(i != exceptDoor){
+				
+				int door = myRouter.getDoorOnMyRoute(i);
+				ms.nextProcId = i;
+				boolean send = sendTo(door, ms);	
+			}
+		}
+	}
+	
+	synchronized public void receiveFormMessage(final FormMessage form) {
+		// TODO Auto-generated method stub
+		
+		if (form.nextProcId == procId) {
+			
+			log.logMsg("Proc-" + procId + ": Receive form of " + form.procId);
+			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
+			
+		} else {
 
+			next = myRouter.getDoorOnMyRoute(form.nextProcId);
+			log.logMsg("Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
+			boolean sent = sendTo(next, form);
+		}
+
+	}
+	// Access to receive function
+	public Message recoit(final Door d) {
+
+		Message m = receive(d);
+		return m;
+	}
+	
 	// Display state
 	void displayState() {
 
