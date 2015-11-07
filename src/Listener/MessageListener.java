@@ -59,7 +59,7 @@ public class MessageListener extends Thread {
 		Message m_rec = algo2.recoit(d);
 		if(m_rec instanceof RicartAggrawalaMessage){
 		
-			System.out.println("Proc-"+algo2.procId+" Listener receive message on door "+d);
+			System.out.println("Proc-"+algo2.procId+" Listener receive message on door "+d.getNum());
 			RicartAggrawalaMessage m = (RicartAggrawalaMessage)m_rec;
 			switch (m.getMsgType()) {
 				
@@ -81,7 +81,7 @@ public class MessageListener extends Thread {
 		}
 		else if(m_rec instanceof FormMessage){
 			
-			receiveFormeMessage(algo, m_rec);
+			receiveFormeMessage(algo, m_rec,d.getNum());
 			
 		}else{
 			
@@ -129,7 +129,7 @@ public class MessageListener extends Thread {
 		}
 		else if(m_rec instanceof FormMessage){
 			
-			receiveFormeMessage(algo, m_rec);
+			receiveFormeMessage(algo, m_rec,d.getNum());
 			
 		}else{
 			
@@ -145,7 +145,7 @@ public class MessageListener extends Thread {
 	}
 	
 
-	private void receiveFormeMessage(Algorithm algo, Message m_){
+	private void receiveFormeMessage(Algorithm algo, Message m_, int door){
 		
 		FormMessage m = (FormMessage)m_;
 		if(algo instanceof LelannMutualExclusion){
