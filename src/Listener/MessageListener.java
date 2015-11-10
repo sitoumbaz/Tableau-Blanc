@@ -3,6 +3,7 @@ package Listener;
 import Lelann.LelannMutualExclusion;
 import Lelann.TokenMessage;
 import Message.FormMessage;
+import Naimi.NaimiTreilMutualExclusion;
 import RicartAggrawala.RicartAggrawalaMessage;
 import RicartAggrawala.RicartAggrawalaMutualExclusion;
 import Router.ExtendRouteMessage;
@@ -13,9 +14,12 @@ import visidia.simulation.process.messages.Message;
 // Reception thread
 public class MessageListener extends Thread {
 
+	Algorithm algo;
 	LelannMutualExclusion algo1;
 	RicartAggrawalaMutualExclusion algo2;
-	Algorithm algo;
+	NaimiTreilMutualExclusion algo3;
+	
+	
 	public MessageListener(final Algorithm a) {
 		
 		algo = a;
@@ -27,6 +31,11 @@ public class MessageListener extends Thread {
 		if(a instanceof RicartAggrawalaMutualExclusion){
 					
 			algo2 = (RicartAggrawalaMutualExclusion)a;
+		}
+		
+		if(a instanceof RicartAggrawalaMutualExclusion){
+			
+			algo3 = (NaimiTreilMutualExclusion)a;
 		}
 		
 
@@ -49,6 +58,12 @@ public class MessageListener extends Thread {
 				
 				
 				listenRicartAggrawalaMessage(algo2, d);
+			}
+			
+			if(algo3 instanceof NaimiTreilMutualExclusion){
+				
+				
+				listenerNaimiTreilMessage(algo3, d);
 			}
 			
 		}
@@ -176,6 +191,11 @@ public class MessageListener extends Thread {
 			}
 			
 		}
+		
+	}
+	
+	private void listenerNaimiTreilMessage(NaimiTreilMutualExclusion algo32, Door d){
+		
 		
 	}
 }
