@@ -11,7 +11,6 @@ import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
-import Lelann.TokenMessage;
 import Listener.MessageListener;
 import Message.FormMessage;
 import Message.MsgType;
@@ -29,7 +28,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	// Router
 	public MyRouter myRouter;
 	public int next = 0;
-	
+
 	//
 	public int speed = 4;
 
@@ -52,17 +51,17 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	public int procId = 0; // My processus Id
 
 	private ProcLogger log = null; /* logger */
-	
+
 	// Tableau blanc
 	private Lanceur lanceur;
 	private Point p1 = null;
 	private Point p2 = null;
 	private float tailleForm;
 	private int typeForm;
-	
+
 	// form Generator
 	MoteurTest motTest;
-	
+
 	MessageListener messageListener = null;
 
 	@Override
@@ -81,52 +80,51 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		myRouter = new MyRouter(getNetSize());
 		myRouter.setDoorToMyRoute(getId(), -2);
 		log = new ProcLogger(procId, "Ricart");
-		
-		//Generateur aleatoire
+
+		// Generateur aleatoire
 		Random rand = new Random();
-		
+
 		/* Begin setting up route */
-		
+
 		setRoutingTable();
-		// attente que chaque que les messages aient le temps de se propager
-		try {
-			Thread.sleep(2500);
-		} catch (InterruptedException ie) {}
+		// // attente que chaque que les messages aient le temps de se propager
+		// try {
+		// Thread.sleep(2500);
+		// } catch (InterruptedException ie) {}
 
 		extendRoutingTable();
 		sayIamReady();
-		
+
 		/* End setting up route */
-		
-		
-		log.logMsg("Proc-"+procId+" I am ready to begin "+ myRouter.ready);
+
+		log.logMsg("Proc-" + procId + " I am ready to begin " + myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
-		log.logMsg("Proc-"+procId+" I launch the white board named Tableau Blanc Proc"+procId);
+		log.logMsg("Proc-" + procId
+				+ " I launch the white board named Tableau Blanc Proc" + procId);
 		motTest = new MoteurTest();
 		lanceur.start();
-		
-		
+
 		messageListener = new MessageListener(this);
 		messageListener.start();
 		log.logMsg("Proc-" + procId + " I start my message Listerner");
-		
+
 		while (true) {
 
 			// Wait for some time
-			time = (4 + rand.nextInt(10)) * 1000;
-			log.logMsg("Proc-" + procId + ":  wait for " + time);
-			try {
-				Thread.sleep(time);
-			} catch (InterruptedException ie) {
-				log.logMsg("Proc-" + procId + " : Error" + ie.getMessage());
-			}
+			// time = (4 + rand.nextInt(10)) * 1000;
+			// log.logMsg("Proc-" + procId + ":  wait for " + time);
+			// try {
+			// Thread.sleep(time);
+			// } catch (InterruptedException ie) {
+			// log.logMsg("Proc-" + procId + " : Error" + ie.getMessage());
+			// }
 
 			// Try to access critical section
 			R = true;
 			askCriticalSection();
 
 			// Access critical
-			
+
 			// displayState();
 
 			// Simulate critical resource use
@@ -233,7 +231,8 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	}
 
 	// Send message Where Is
-	public void sendRouteMessage(	final ExtendRouteMessage mr,final int exceptDoor) {
+	public void sendRouteMessage(	final ExtendRouteMessage mr,
+									final int exceptDoor) {
 
 		for (int i = 0; i < getArity(); i++) {
 
@@ -266,60 +265,63 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	}
 
 	/* Rule 1 : processus ask for critical section */
-	private synchronized  void askCriticalSection(){
-		
+	private synchronized void askCriticalSection() {
+
 		R = true;
 		HSC = H++;
-		Nrel = getNetSize()-1;
-		
-		for(int i=0; i<getNetSize(); i++){
-			
-			if(i != procId){
-				
+		Nrel = getNetSize() - 1;
+
+		for (int i = 0; i < getNetSize(); i++) {
+
+			if (i != procId) {
+
 				int door = myRouter.getDoorOnMyRoute(i);
-				RicartAggrawalaMessage ms = new RicartAggrawalaMessage(MsgType.REQ, procId,i,HSC);
-				boolean send = this.sendTo(door, ms);	
+				RicartAggrawalaMessage ms = new RicartAggrawalaMessage(
+						MsgType.REQ, procId, i, HSC);
+				boolean send = this.sendTo(door, ms);
 			}
 		}
-		
+
 		motTest.creerForme();
 		p1 = motTest.getPoint1();
 		p2 = motTest.getPoint2();
 		typeForm = motTest.getChoixForme();
-		log.logMsg("Proc-"+procId+" : Create form, wait critical section  befor drawing");
-		
-		while(Nrel != 0){
+		log.logMsg("Proc-" + procId
+				+ " : Create form, wait critical section  befor drawing");
+
+		while (Nrel != 0) {
 			try {
 				this.wait();
-			} catch (InterruptedException e) {e.printStackTrace();}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
-		
+
 	}
-	
+
 	/* Rules 2 : */
-	public synchronized void receiveReq(RicartAggrawalaMessage ms){
-		
+	public synchronized void receiveReq(final RicartAggrawalaMessage ms) {
+
 		int door = myRouter.getDoorOnMyRoute(ms.procRecipient);
-		if(ms.procRecipient == procId){
-			
+		if (ms.procRecipient == procId) {
+
 			door = myRouter.getDoorOnMyRoute(ms.procId);
 			H = Math.max(H, ms.H);
-			if(R && (HSC < ms.H) || ((HSC == ms.H) && this.procId < ms.procId)){
-				
-				X.put(ms.procId,door);
-			}
-			else{
-				
-				RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(MsgType.REL, procId,ms.procId,0);
+			if (R && (HSC < ms.H) || ((HSC == ms.H) && this.procId < ms.procId)) {
+
+				X.put(ms.procId, door);
+			} else {
+
+				RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(
+						MsgType.REL, procId, ms.procId, 0);
 				this.sendTo(door, mrel);
 			}
-			
-		}
-		else{
-			
+
+		} else {
+
 			this.sendTo(door, ms);
 		}
-		
+
 	}
 
 	/* Rule 3 : */
@@ -328,24 +330,25 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 
 		if (rm.procRecipient == procId) {
 			Nrel--;
-			if(Nrel == 0){
-				
+			if (Nrel == 0) {
+
 				Color bg = Color.blue;
 				Color fg = Color.red;
 				lanceur.ajouteForme(p1, p2, typeForm);
-				for(int i=0; i<getNetSize(); i++){
-					
-					if(i != procId){
-						
-						FormMessage form = new FormMessage(MsgType.FORME, procId,i, p1, p2, tailleForm, typeForm, bg, fg);
+				for (int i = 0; i < getNetSize(); i++) {
+
+					if (i != procId) {
+
+						FormMessage form = new FormMessage(MsgType.FORME,
+								procId, i, p1, p2, tailleForm, typeForm, bg, fg);
 						int door = myRouter.getDoorOnMyRoute(i);
-						boolean send = this.sendTo(door, form);	
+						boolean send = this.sendTo(door, form);
 					}
 				}
 				notify();
 			}
 		} else {
-			
+
 			next = this.myRouter.getDoorOnMyRoute(rm.procRecipient);
 			log.logMsg("proc-" + procId
 					+ " : Receive REL, do not need it, I forward it to "
@@ -360,9 +363,10 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		R = false;
 		for (int i = 0; i < getNetSize(); i++) {
 
-			if(X.containsKey(i)){
-				
-				RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(MsgType.REL, procId,0,0);
+			if (X.containsKey(i)) {
+
+				RicartAggrawalaMessage mrel = new RicartAggrawalaMessage(
+						MsgType.REL, procId, 0, 0);
 				mrel.procRecipient = i;
 				int door = this.myRouter.getDoorOnMyRoute(i);
 				this.sendTo(door, mrel);
@@ -370,19 +374,22 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			}
 		}
 	}
-	
+
 	synchronized public void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
-		System.out.println("Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
+		System.out.println("Proc-" + this.procId + " Recoit form destine a "
+				+ form.nextProcId);
 		if (form.nextProcId == procId) {
-			
+
 			log.logMsg("Proc-" + procId + ": Receive form of " + form.procId);
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			
+
 		} else {
 
 			next = myRouter.getDoorOnMyRoute(form.nextProcId);
-			log.logMsg("Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
+			log.logMsg("Proc-" + procId + ": Receive form of " + form.procId
+					+ " send it to the recipient Proc-" + form.nextProcId
+					+ " on door " + next);
 			this.sendTo(next, form);
 		}
 
@@ -393,19 +400,17 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		Message m = receive(d);
 		return m;
 	}
-	
+
 	// Display state
 	void displayState() {
 
 		String state = new String("\n");
 		state = state + "--------------------------------------\n";
-		/*if (inCritical)
-			state = state + "** ACCESS CRITICAL **\n";
-		else if (waitForCritical)
-			state = state + "* WAIT FOR *\n";
-		else
-			state = state + "-- SLEEPING --\n";
-		*/
+		/*
+		 * if (inCritical) state = state + "** ACCESS CRITICAL **\n"; else if
+		 * (waitForCritical) state = state + "* WAIT FOR *\n"; else state =
+		 * state + "-- SLEEPING --\n";
+		 */
 		if (myRouter.ready == this.getNetSize()) {
 
 			iAmReady = false;

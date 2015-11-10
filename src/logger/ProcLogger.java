@@ -23,22 +23,23 @@ public class ProcLogger {
 	public ProcLogger(final int procid, final String algo) {
 		this.procId = procid;
 
-		File dir = new File("log/");
+		logger = Logger.getLogger("MyLog");
+		String logFile = algo + "_log_proc_" + procid + ".log";
+		File file = new File("log/" + logFile);
+		file.delete();
 
 		// attempt to create the directory here
-		boolean successful = dir.mkdir();
+		boolean successful = file.mkdirs();
 		if (successful) {
 			System.out.println("directory was created successfully : "
-					+ dir.getAbsolutePath());
+					+ file.getAbsolutePath());
 		} else {
-			System.out.println("failed trying to create the directory");
+			System.out.println("failed trying to create the directory : "
+					+ file.getAbsolutePath());
 		}
 
-		logger = Logger.getLogger("MyLog");
-		String logFile = algo + "_log_proc_" + procid;
-		new File(logFile).delete();
 		try {
-			fh = new FileHandler("log/" + logFile, true);
+			fh = new FileHandler("log" + File.separator + logFile, true);
 			logger.addHandler(fh);
 			logger.setLevel(Level.ALL);
 			BriefFormatter formatter = new BriefFormatter();
