@@ -161,6 +161,10 @@ public class LelannMutualExclusion extends Algorithm {
 
 		}
 
+		// unreachable code, to uncomment when we decide of a ending condition
+		// for the algorithm
+		// log.close();
+
 	}
 	// --------------------
 	// Rules
