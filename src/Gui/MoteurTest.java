@@ -25,6 +25,7 @@ public class MoteurTest {
 		java.util.Random rand = new java.util.Random();
 
 		int choixForme = rand.nextInt((3) + 1);
+
 		setChoixForme(choixForme);
 
 		int p1x = rand.nextInt((max - min) + 1) + min;

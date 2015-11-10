@@ -24,22 +24,36 @@ public class ProcLogger {
 		this.procId = procid;
 
 		logger = Logger.getLogger("MyLog");
-		String logFile = algo + "_log_proc_" + procid + ".log";
-		File file = new File("log/" + logFile);
-		file.delete();
 
-		// attempt to create the directory here
-		boolean successful = file.mkdirs();
-		if (successful) {
-			System.out.println("directory was created successfully : "
-					+ file.getAbsolutePath());
-		} else {
-			System.out.println("failed trying to create the directory : "
-					+ file.getAbsolutePath());
+		String logFileName = algo + "_log_proc_" + procid;
+		String logFilePath = "log" + File.separator + logFileName;
+
+		File file = new File("log/");
+
+		// attempt to delete previous logfiles
+		if (file.exists()) {
+			boolean successful = file.delete();
+			if (successful) {
+				System.out.println("previous logfiles were deleted");
+			} else {
+				System.out.println("failed trying to delete previous logfiles, maybe there were none.");
+			}
 		}
 
+		file = new File("log/");
+		if (!file.exists()) {
+			// attempt to create the directory here
+			boolean successful = file.mkdirs();
+			if (successful) {
+				System.out.println("directory was created successfully : "
+						+ file.getAbsolutePath());
+			} else {
+				System.out.println("failed trying to create the directory maybe it's already created: "
+						+ file.getAbsolutePath());
+			}
+		}
 		try {
-			fh = new FileHandler("log" + File.separator + logFile, true);
+			fh = new FileHandler(logFilePath, true);
 			logger.addHandler(fh);
 			logger.setLevel(Level.ALL);
 			BriefFormatter formatter = new BriefFormatter();
