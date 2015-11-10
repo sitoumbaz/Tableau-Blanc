@@ -8,6 +8,10 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+/*
+ * Créer une fonction qui crée le dossier log
+ * 
+ */
 public class ProcLogger {
 
 	FileHandler fh;
@@ -19,11 +23,22 @@ public class ProcLogger {
 	public ProcLogger(final int procid, final String algo) {
 		this.procId = procid;
 
+		File dir = new File("log/");
+
+		// attempt to create the directory here
+		boolean successful = dir.mkdir();
+		if (successful) {
+			System.out.println("directory was created successfully : "
+					+ dir.getAbsolutePath());
+		} else {
+			System.out.println("failed trying to create the directory");
+		}
+
 		logger = Logger.getLogger("MyLog");
-		String logFile = algo+"_log_proc_"+procid;
+		String logFile = algo + "_log_proc_" + procid;
 		new File(logFile).delete();
 		try {
-			fh = new FileHandler("log/"+logFile, true);
+			fh = new FileHandler("log/" + logFile, true);
 			logger.addHandler(fh);
 			logger.setLevel(Level.ALL);
 			BriefFormatter formatter = new BriefFormatter();
