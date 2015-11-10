@@ -11,7 +11,7 @@ import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
-import Listener.ReceptionRules;
+import Listener.MessageListener;
 import Message.FormMessage;
 import Message.MsgType;
 import Router.ExtendRouteMessage;
@@ -54,7 +54,7 @@ public class LelannMutualExclusion extends Algorithm {
 	ProcLogger log;
 
 	// Critical section thread
-	ReceptionRules rr = null;
+	MessageListener messageListener = null;
 
 	// To display the state
 	boolean waitForCritical = false;
@@ -106,8 +106,8 @@ public class LelannMutualExclusion extends Algorithm {
 		motTest = new MoteurTest();
 		lanceur.start();
 
-		rr = new ReceptionRules(this);
-		rr.start();
+		messageListener = new MessageListener(this);
+		messageListener.start();
 		log.logMsg("Proc-" + procId + " I start my message Listerner");
 
 		if (procId == 0) {
