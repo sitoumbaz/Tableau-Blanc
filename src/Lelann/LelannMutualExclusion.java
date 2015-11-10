@@ -60,7 +60,6 @@ public class LelannMutualExclusion extends Algorithm {
 	boolean waitForCritical = false;
 	boolean inCritical = false;
 
-
 	@Override
 	public String getDescription() {
 
