@@ -1,12 +1,11 @@
-package Lelann;
+package Message;
 
-import Message.MsgType;
 import visidia.simulation.process.messages.Message;
 
 public class TokenMessage extends Message {
     
     public MsgType type;
-    int idProc;
+    public int idProc;
     
     public TokenMessage(MsgType t, int proc) {
 		type = t;

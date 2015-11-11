@@ -1,20 +1,19 @@
-package RicartAggrawala;
+package Message;
 
 import visidia.simulation.process.messages.Message;
-import Message.MsgType;
 
-public class RicartAggrawalaMessage extends Message {
+public class RulesMessage extends Message {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	MsgType type;
-	int procId;
-	int procRecipient;
-	int H;
+	public int procId;
+	public int procRecipient;
+	public int H;
 
-	public RicartAggrawalaMessage(	final MsgType t,
+	public RulesMessage(	final MsgType t,
 									final int id1,
 									final int id2,
 									final int h) {
@@ -32,7 +31,7 @@ public class RicartAggrawalaMessage extends Message {
 
 	@Override
 	public Message clone() {
-		return new RicartAggrawalaMessage(MsgType.REQ, procId, procRecipient, H);
+		return new RulesMessage(MsgType.REQ, procId, procRecipient, H);
 	}
 
 	@Override
@@ -42,6 +41,10 @@ public class RicartAggrawalaMessage extends Message {
 		if (getMsgType() == MsgType.REL) {
 
 			r = "REL(" + procId + "," + procRecipient + ")";
+		}
+		else if(getMsgType() == MsgType.TOKEN){
+			
+			r = "JETON()";
 		}
 		return r;
 	}

@@ -1,7 +1,6 @@
-package Router;
+package Message;
 
 import visidia.simulation.process.messages.Message;
-import Message.MsgType;
 
 public class RouteMessage extends Message {
 

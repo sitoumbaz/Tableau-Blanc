@@ -12,7 +12,7 @@ import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
 
 // Reception thread
-public class MessageListener extends Thread {
+public class RoutingListener extends Thread {
 
 	Algorithm algo;
 	LelannMutualExclusion algo1;
@@ -20,7 +20,7 @@ public class MessageListener extends Thread {
 	NaimiTreilMutualExclusion algo3;
 	
 	
-	public MessageListener(final Algorithm a) {
+	public RoutingListener(final Algorithm a) {
 		
 		algo = a;
 		if(a instanceof LelannMutualExclusion){
@@ -68,51 +68,6 @@ public class MessageListener extends Thread {
 			
 		}
 	}
-	
-
-	private void listenerNaimiTreilMessage(NaimiTreilMutualExclusion algo3, Door d){
-		
-		Message m_rec = algo3.recoit(d);
-		if(m_rec instanceof RulesMessage){
-		
-			
-			RulesMessage m = (RulesMessage)m_rec;
-			System.out.println("Proc-"+algo3.procId+" Listener receive message "+m.toString()+" on door "+d.getNum());
-			switch (m.getMsgType()) {
-				
-				case REQ :
-					
-					algo3.receiveReq(m);
-					
-				break;
-				
-				case TOKEN :
-					
-					algo3.receiveJeton(m);
-					
-				break;
-	
-				default :
-					System.out.println("Error message type");
-			}
-		}
-		else if(m_rec instanceof FormMessage){
-			
-			receiveFormeMessage(algo, m_rec,d.getNum());
-			
-		}else{
-			
-			if(m_rec instanceof ExtendRouteMessage ){
-				
-					System.out.println("Receive message ExtendRouteMessage");
-					
-			}else{
-				
-				System.out.println("Error message");
-			}
-		}
-	}
-	
 	
 	private void listenRicartAggrawalaMessage(RicartAggrawalaMutualExclusion algo2, Door d){
 		
@@ -237,19 +192,11 @@ public class MessageListener extends Thread {
 			}
 			
 		}
-		else if( algo instanceof NaimiTreilMutualExclusion){
-			
-			NaimiTreilMutualExclusion naimi = (NaimiTreilMutualExclusion)algo;
-			switch (m.getMsgType()) {
-
-				case FORME :
-					naimi.receiveFormMessage(m);
-					break;
-	
-				default :
-					System.out.println("Error message type");
-			}
-		}
+		
 	}
 	
+	private void listenerNaimiTreilMessage(NaimiTreilMutualExclusion algo32, Door d){
+		
+		
+	}
 }

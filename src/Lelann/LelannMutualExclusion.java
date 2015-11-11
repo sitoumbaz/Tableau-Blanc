@@ -12,11 +12,12 @@ import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
 import Listener.MessageListener;
+import Message.ExtendRouteMessage;
 import Message.FormMessage;
 import Message.MsgType;
-import Router.ExtendRouteMessage;
+import Message.RouteMessage;
+import Message.TokenMessage;
 import Router.MyRouter;
-import Router.RouteMessage;
 
 public class LelannMutualExclusion extends Algorithm {
 
