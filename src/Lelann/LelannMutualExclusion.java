@@ -15,8 +15,13 @@ import Listener.MessageListener;
 import Message.ExtendRouteMessage;
 import Message.FormMessage;
 import Message.MsgType;
+<<<<<<< HEAD
 import Message.RouteMessage;
 import Message.TokenMessage;
+=======
+import Message.TokenMessage;
+import Router.ExtendRouteMessage;
+>>>>>>> 67440165a6b9183bbefc0481318466b53ea1452d
 import Router.MyRouter;
 
 public class LelannMutualExclusion extends Algorithm {
@@ -161,6 +166,10 @@ public class LelannMutualExclusion extends Algorithm {
 
 		}
 
+		// unreachable code, to uncomment when we decide of a ending condition
+		// for the algorithm
+		// log.close();
+
 	}
 	// --------------------
 	// Rules
@@ -249,7 +258,7 @@ public class LelannMutualExclusion extends Algorithm {
 	// Rule 4 : receive TOKEN
 	public synchronized void receiveTOKEN(final TokenMessage tm) {
 
-		if (tm.idProc == procId) {
+		if (tm.getIdProc() == procId) {
 			next = myRouter.getDoorOnMyRoute(getNextProcId());
 			if (waitForCritical) {
 
@@ -275,13 +284,13 @@ public class LelannMutualExclusion extends Algorithm {
 						+ " : Receive token, do not need it, I forward it to "
 						+ getNextProcId() + " on door " + next);
 
-				tm.idProc = getNextProcId();
+				tm.setIdProc(getNextProcId());
 				boolean sent = sendTo(next, tm);
 			}
 
 		} else {
 
-			next = myRouter.getDoorOnMyRoute(tm.idProc);
+			next = myRouter.getDoorOnMyRoute(tm.getIdProc());
 			log.logMsg("proc-" + procId
 					+ " : Receive token but do not need it, on door " + next);
 			boolean sent = sendTo(next, tm);
