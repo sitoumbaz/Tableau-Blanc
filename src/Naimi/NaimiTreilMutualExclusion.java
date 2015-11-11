@@ -15,13 +15,8 @@ import Listener.MessageListener;
 import Message.ExtendRouteMessage;
 import Message.FormMessage;
 import Message.MsgType;
-<<<<<<< HEAD
 import Message.RouteMessage;
 import Message.RulesMessage;
-=======
-import Message.TokenMessage;
-import Router.ExtendRouteMessage;
->>>>>>> 67440165a6b9183bbefc0481318466b53ea1452d
 import Router.MyRouter;
 
 public class NaimiTreilMutualExclusion extends Algorithm {
@@ -63,12 +58,6 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	// Critical section thread
 	MessageListener messageListener = null;
 
-<<<<<<< HEAD
-=======
-	// To display the state
-	boolean waitForCritical = false;
-	boolean inCritical = false;
->>>>>>> 67440165a6b9183bbefc0481318466b53ea1452d
 
 	@Override
 	public String getDescription() {
@@ -328,123 +317,6 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 			recoitExtendRouteMessage(d);
 		}
 		iAmReady = true;
-<<<<<<< HEAD
-=======
-		displayState();
-	}
-
-	// Rule 3 : ask for critical section
-	synchronized void askForCritical() {
-
-		while (!token) {
-			displayState();
-			motTest.creerForme();
-			p1 = motTest.getPoint1();
-			p2 = motTest.getPoint2();
-			typeForm = motTest.getChoixForme();
-			log.logMsg("Proc-" + procId
-					+ " : Create form, wait critical section  befor drawing");
-			try {
-				this.wait();
-			} catch (InterruptedException ie) {
-			}
-		}
-	}
-	// Rule 4 : receive TOKEN
-	public synchronized void receiveTOKEN(final TokenMessage tm) {
-
-		if (tm.getIdProc() == procId) {
-			next = myRouter.getDoorOnMyRoute(getNextProcId());
-			if (waitForCritical) {
-
-				lanceur.ajouteForme(p1, p2, typeForm);
-				next = myRouter.getDoorOnMyRoute(getNextProcId());
-				token = true;
-				displayState();
-				Color bg = Color.blue;
-				Color fg = Color.red;
-				FormMessage form = new FormMessage(MsgType.FORME, procId,
-						getNextProcId(), p1, p2, tailleForm, typeForm, bg, fg);
-				boolean sent = sendTo(next, form);
-
-				log.logMsg("Proc-" + procId
-						+ " : Receive token, get in critical section, "
-						+ "drawing form and send my form to proc-"
-						+ getNextProcId() + " on door " + next);
-				notify();
-
-			} else {
-
-				log.logMsg("proc-" + procId
-						+ " : Receive token, do not need it, I forward it to "
-						+ getNextProcId() + " on door " + next);
-
-				tm.setIdProc(getNextProcId());
-				boolean sent = sendTo(next, tm);
-			}
-
-		} else {
-
-			next = myRouter.getDoorOnMyRoute(tm.getIdProc());
-			log.logMsg("proc-" + procId
-					+ " : Receive token but do not need it, on door " + next);
-			boolean sent = sendTo(next, tm);
-		}
-	}
-
-	// Rule 5 : receive Form && I send the form if only the next proc is
-	// different of the owner of the form
-	synchronized public void receiveFormMessage(final FormMessage form) {
-		// TODO Auto-generated method stub
-		log.logMsg("Proc-" + procId + ": Receive form of " + form.procId);
-		if (form.nextProcId == procId) {
-
-			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			if (getNextProcId() > form.nextProcId
-					&& getNextProcId() != form.procId) {
-				form.nextProcId = getNextProcId();
-				next = myRouter.getDoorOnMyRoute(form.nextProcId);
-				boolean sent = sendTo(next, form);
-			} else {
-
-				if (getNextProcId() != form.procId) {
-
-					form.nextProcId = getNextProcId();
-					next = myRouter.getDoorOnMyRoute(form.nextProcId);
-					boolean sent = sendTo(next, form);
-				}
-			}
-		} else {
-
-			next = myRouter.getDoorOnMyRoute(form.nextProcId);
-			boolean sent = sendTo(next, form);
-		}
-
-	}
-
-	// Rule 6 :
-	void endCriticalUse() {
-
-		next = myRouter.getDoorOnMyRoute(getNextProcId());
-		token = false;
-		TokenMessage tm = new TokenMessage(MsgType.TOKEN, getNextProcId());
-		boolean sent = sendTo(next, tm);
-		log.logMsg("proc-" + procId
-				+ " : Leave Critical Section send token to " + getNextProcId()
-				+ " on door " + next);
-		displayState();
-	}
-
-	// Determine the next proc id
-	public int getNextProcId() {
-
-		nextProcId = procId + 1;
-		if (getNetSize() == procId + 1) {
-
-			nextProcId = 0;
-		}
-		return nextProcId;
->>>>>>> 67440165a6b9183bbefc0481318466b53ea1452d
 	}
 	
 	

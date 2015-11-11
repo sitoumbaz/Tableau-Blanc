@@ -5,22 +5,18 @@ import visidia.simulation.process.messages.Message;
 public class TokenMessage extends Message {
     
     public MsgType type;
-<<<<<<< HEAD:src/Message/TokenMessage.java
     public int idProc;
-=======
-    private int idProc;
->>>>>>> 67440165a6b9183bbefc0481318466b53ea1452d:src/Message/TokenMessage.java
     
     public TokenMessage(MsgType t, int proc) {
 		type = t;
-		setIdProc(proc);
+		idProc = proc;
     }
 
     public MsgType getMsgType() { return type; }
     
     @Override
     public Message clone() {
-    	return new TokenMessage(MsgType.TOKEN, getIdProc());
+    	return new TokenMessage(MsgType.TOKEN, idProc);
     }
     
     @Override 
@@ -35,13 +31,5 @@ public class TokenMessage extends Message {
 
 	return this.toString();
     }
-
-	public int getIdProc() {
-		return idProc;
-	}
-
-	public void setIdProc(int idProc) {
-		this.idProc = idProc;
-	}
 
 }
