@@ -2,10 +2,6 @@
 
 Ecrire des messages pertinents dans le logger
 
-Implementer ricard,
-
-Implementer le dernier.
-
 Faire le squelette du rapport
 
 Modifier tableauBlancUI.java pour pouvoir faire des tests manuel :
@@ -37,3 +33,7 @@ Faire un moteur de tests :
 	3.2) Si c'est autre chose il nous faudra 2 points donc on fait un random du premier point
 		Pour le deuxieme point on fera un deuxieme random entre 10 et 50 par exemple pour definir la taille de la forme 
 		ca nous evitera d'avoir des fores qui prennent tout le tableau
+
+Implementer ricard,
+
+Implementer naimi
