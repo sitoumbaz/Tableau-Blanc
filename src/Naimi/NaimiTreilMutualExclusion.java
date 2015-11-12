@@ -12,6 +12,7 @@ import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
 import Listener.MessageListener;
+import Listener.RoutingListener;
 import Message.ExtendRouteMessage;
 import Message.FormMessage;
 import Message.MsgType;
@@ -36,7 +37,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	public boolean SCI = false;
 
 	// just displaying routing table in the log
-	boolean iAmReady = false;
+	public boolean iAmReady = false;
 	
 	// Router
 	public MyRouter myRouter;
@@ -57,7 +58,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 
 	// Critical section thread
 	MessageListener messageListener = null;
-
+	RoutingListener routing = null;
 
 	@Override
 	public String getDescription() {
@@ -77,6 +78,8 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	public void init() {
 		
 		procId = getId();
+		netSize = getNetSize();
+		arity = getArity();
 		// Create logger
 		log = new ProcLogger(procId, "Naimi");
 		
@@ -118,18 +121,27 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	}
 	
 	
-	public void routing(){
+	public synchronized  void routing(){
 		
 		myRouter = new MyRouter(getNetSize());
 		myRouter.setDoorToMyRoute(getId(), -2);
-		setRoutingTable();
-		// attente que chaque que les messages aient le temps de se propager
+		
+		routing = new RoutingListener(this,log, myRouter);
+		routing.start();
+		while(!iAmReady){
+			
+			try{
+				this.wait();
+			} catch (InterruptedException e) {e.printStackTrace();}
+		}
+		System.out.println("YEP");
 		try {
-			Thread.sleep(2500);
-		} catch (InterruptedException ie) {}
-
-		extendRoutingTable();
-		sayIamReady();
+			
+			routing.sleep(1000);
+			routing.interrupt();
+		
+		} catch (InterruptedException e) {e.printStackTrace();}
+		
 	}
 	
 	public void drawNewForm(){
@@ -257,68 +269,6 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	}
 	/********************************* End Rules of the Algorithm of Naimi Treil *****************************/
 	
-	/********************************** Rules of setting the route *******************************************/
-	// Rule 1 : tell to all my neighbor where I am
-	public synchronized void setRoutingTable() {
-
-		for (int i = 0; i < getArity(); i++) {
-
-			RouteMessage mr = new RouteMessage(MsgType.ROUTE, getId());
-			boolean send = this.sendTo(i, mr);
-		}
-
-		int i = 0;
-		while (i < getArity()) {
-
-			Door d = new Door();
-			RouteMessage mr = recoitRoute(d);
-			myRouter.setDoorToMyRoute(mr.getProcId(), d.getNum());
-			myRouter.complete++;
-			i++;
-		}
-
-	}
-
-	// Rule 2 : After knowing who are on each all of my doors, I extend my routing table
-	public synchronized void extendRoutingTable() {
-
-		// Stay awaiting while my routing table is not complete
-		while (myRouter.complete < getNetSize()) {
-
-			// Send my Routing table to my neighbors
-			if (getArity() > 1) {
-
-				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,
-						getId(), procId);
-				mr.setRoutingTable(myRouter.getMyRoute());
-				sendRouteMessage(mr, -1);
-			}
-
-			Door d = new Door();
-			recoitExtendRouteMessage(d);
-		}
-		myRouter.ProcBecomeReady(procId, true);
-
-	}
-
-	// Rule 3 : My routing table is complete and I'am waiting other proc to be ready like me
-	public synchronized void sayIamReady() {
-
-		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),
-				procId);
-		mr.setRoutingTable(myRouter.getMyRoute());
-		sendRouteMessage(mr, -1);
-
-		log.logMsg("Proc-" + procId + " : I am Ready");
-		// Stay awaiting while my routing table is not complete
-		while (myRouter.ready < getNetSize()) {
-
-			Door d = new Door();
-			recoitExtendRouteMessage(d);
-		}
-		iAmReady = true;
-	}
-	
 	
 	// Access to receive function
 	public void recoitExtendRouteMessage(final Door d) {
@@ -422,5 +372,10 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 			}
 		}
 		
+	}
+	
+	public boolean envoiTo(int door, Message message){
+		
+		return sendTo(door,message);
 	}
 }

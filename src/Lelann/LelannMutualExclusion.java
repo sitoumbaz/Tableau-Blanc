@@ -12,6 +12,7 @@ import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
 import Listener.MessageListener;
+import Listener.RoutingListener;
 import Message.ExtendRouteMessage;
 import Message.FormMessage;
 import Message.MsgType;
@@ -35,7 +36,7 @@ public class LelannMutualExclusion extends Algorithm {
 	public int arity = 0;
 
 	// just for managin displaying routing table in the log
-	boolean iAmReady = false;
+	public boolean iAmReady = false;
 	// Router
 	public MyRouter myRouter;
 
@@ -56,6 +57,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 	// Critical section thread
 	MessageListener messageListener = null;
+	RoutingListener routing = null; 
 
 	// To display the state
 	boolean waitForCritical = false;
@@ -87,18 +89,7 @@ public class LelannMutualExclusion extends Algorithm {
 		arity = getArity();
 
 		// Init routeMap
-		myRouter = new MyRouter(getNetSize());
-		myRouter.setDoorToMyRoute(getId(), -2);
-
-		setRoutingTable();
-		// attente que chaque que les messages aient le temps de se propager
-		try {
-			Thread.sleep(2500);
-		} catch (InterruptedException ie) {
-		}
-
-		extendRoutingTable();
-		sayIamReady();
+		routing();
 
 		log.logMsg("Proc-" + procId + " I am ready to begin " + myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
@@ -166,67 +157,27 @@ public class LelannMutualExclusion extends Algorithm {
 	// Rules
 	// -------------------
 
-	// Rule 0 : tell to all my neighbor where I am
-	synchronized void setRoutingTable() {
-
-		for (int i = 0; i < getArity(); i++) {
-
-			RouteMessage mr = new RouteMessage(MsgType.ROUTE, getId());
-			boolean send = sendTo(i, mr);
+	public synchronized  void routing(){
+		
+		myRouter = new MyRouter(getNetSize());
+		myRouter.setDoorToMyRoute(getId(), -2);
+		
+		routing = new RoutingListener(this,log, myRouter);
+		routing.start();
+		while(!iAmReady){
+			
+			try{
+				this.wait();
+			} catch (InterruptedException e) {e.printStackTrace();}
 		}
-
-		int i = 0;
-		while (i < getArity()) {
-
-			Door d = new Door();
-			RouteMessage mr = recoitRoute(d);
-			myRouter.setDoorToMyRoute(mr.getProcId(), d.getNum());
-			myRouter.complete++;
-			i++;
-		}
-
-	}
-
-	// Rule 1 : I need to extend my routing table
-	synchronized void extendRoutingTable() {
-
-		// Stay awaiting while my routing table is not complete
-		while (myRouter.complete < getNetSize()) {
-
-			// Send my Routing table to my neighbors
-			if (getArity() > 1) {
-
-				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,
-						getId(), procId);
-				mr.setRoutingTable(myRouter.getMyRoute());
-				sendRouteMessage(mr, -1);
-			}
-
-			Door d = new Door();
-			recoitExtendRouteMessage(d);
-		}
-		myRouter.ProcBecomeReady(procId, true);
-
-	}
-
-	// Rule 2 : My routing table is complete and I'am waiting other proc to be
-	// ready like me
-	synchronized void sayIamReady() {
-
-		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),
-				procId);
-		mr.setRoutingTable(myRouter.getMyRoute());
-		sendRouteMessage(mr, -1);
-
-		log.logMsg("Proc-" + procId + " : I am Ready");
-		// Stay awaiting while my routing table is not complete
-		while (myRouter.ready < getNetSize()) {
-
-			Door d = new Door();
-			recoitExtendRouteMessage(d);
-		}
-		iAmReady = true;
-		displayState();
+		System.out.println("YEP");
+		try {
+			
+			routing.sleep(1000);
+			routing.interrupt();
+		
+		} catch (InterruptedException e) {e.printStackTrace();}
+		
 	}
 
 	// Rule 3 : ask for critical section
@@ -419,6 +370,11 @@ public class LelannMutualExclusion extends Algorithm {
 				sendRouteMessage(m, d.getNum());
 			}
 		}
+	}
+	
+	public boolean envoiTo(int door, Message message){
+		
+		return sendTo(door,message);
 	}
 
 	// Display state

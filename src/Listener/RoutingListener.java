@@ -1,12 +1,16 @@
 package Listener;
 
+import logger.ProcLogger;
 import Lelann.LelannMutualExclusion;
 import Message.ExtendRouteMessage;
 import Message.FormMessage;
+import Message.MsgType;
+import Message.RouteMessage;
 import Message.RulesMessage;
 import Message.TokenMessage;
 import Naimi.NaimiTreilMutualExclusion;
 import RicartAggrawala.RicartAggrawalaMutualExclusion;
+import Router.MyRouter;
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
@@ -14,18 +18,21 @@ import visidia.simulation.process.messages.Message;
 // Reception thread
 public class RoutingListener extends Thread {
 
-	Algorithm algo;
 	LelannMutualExclusion algo1;
 	RicartAggrawalaMutualExclusion algo2;
 	NaimiTreilMutualExclusion algo3;
+	ProcLogger log;
+	MyRouter myRouter;
 	
-	
-	public RoutingListener(final Algorithm a) {
+	public RoutingListener(Algorithm a, ProcLogger log, MyRouter myRouter) {
 		
-		algo = a;
+		this.log = log;
+		this.myRouter = myRouter;
+		
 		if(a instanceof LelannMutualExclusion){
 			
 			algo1 = (LelannMutualExclusion)a;
+		
 		}
 		
 		if(a instanceof RicartAggrawalaMutualExclusion){
@@ -37,7 +44,6 @@ public class RoutingListener extends Thread {
 			
 			algo3 = (NaimiTreilMutualExclusion)a;
 		}
-		
 
 	}
 
@@ -46,157 +52,188 @@ public class RoutingListener extends Thread {
 
 		Door d = new Door();
 
-		while (true) {
-			
-			if(algo1 instanceof LelannMutualExclusion){
+		if(algo1 instanceof LelannMutualExclusion){
 				
+			synchronized(algo1){
 				
-				listenLelanMessage(algo1, d);
+				listenLelanRouting(algo1, d);
 			}
 			
-			else if(algo2 instanceof RicartAggrawalaMutualExclusion){
+			
+		}
+		
+		else if(algo2 instanceof RicartAggrawalaMutualExclusion){
+			
+			synchronized(algo2){
 				
-				
-				listenRicartAggrawalaMessage(algo2, d);
+				listenRicartAggrawalaRouting(algo2, d);
 			}
 			
-			else if(algo3 instanceof NaimiTreilMutualExclusion){
+		}
+		
+		else if(algo3 instanceof NaimiTreilMutualExclusion){
+			
+			synchronized(algo3){
 				
-				
-				listenerNaimiTreilMessage(algo3, d);
+				listenerNaimiTreilRouting(algo3, d);
 			}
 			
 		}
 	}
 	
-	private void listenRicartAggrawalaMessage(RicartAggrawalaMutualExclusion algo2, Door d){
+	private synchronized void listenRicartAggrawalaRouting(RicartAggrawalaMutualExclusion algorithme, Door d){
 		
-		Message m_rec = algo2.recoit(d);
-		if(m_rec instanceof RulesMessage){
+		// Send message Route
+		for (int i = 0; i < algorithme.arity; i++) {
+
+			System.out.println("ICI"+i);
+			RouteMessage mr = new RouteMessage(MsgType.ROUTE, algorithme.procId);
+			boolean send = algorithme.envoiTo(i, mr);
+		}
+
+		// Receive all message Route
+		int i = 0;
+		while (i < algorithme.arity) {
+
+			Door door = new Door();
+			RouteMessage mr = algorithme.recoitRoute(door);
+			myRouter.setDoorToMyRoute(mr.getProcId(), door.getNum());
+			myRouter.complete++;
+			i++;
+		}
 		
-			
-			RulesMessage m = (RulesMessage)m_rec;
-			System.out.println("Proc-"+algo2.procId+" Listener receive message "+m.toString()+" on door "+d.getNum());
-			switch (m.getMsgType()) {
-				
-				case REQ :
-					
-					algo2.receiveReq(m);
-					
-				break;
-				
-				case REL :
-					
-					algo2.receiveRel(m);
-					
-				break;
-	
-				default :
-					System.out.println("Error message type");
+		// Stay awaiting while my routing table is not complete
+		while (myRouter.complete < algorithme.netSize) {
+
+			// Send my Routing table to my neighbors
+			if (algorithme.arity > 1) {
+
+				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,algorithme.procId, algorithme.procId);
+				mr.setRoutingTable(myRouter.getMyRoute());
+				algorithme.sendRouteMessage(mr, -1);
 			}
+
+			Door door = new Door();
+			algorithme.recoitExtendRouteMessage(door);
 		}
-		else if(m_rec instanceof FormMessage){
-			
-			receiveFormeMessage(algo, m_rec,d.getNum());
-			
-		}else{
-			
-			if(m_rec instanceof ExtendRouteMessage ){
-				
-					System.out.println("Receive message ExtendRouteMessage");
-					
-			}else{
-				
-				System.out.println("Error message");
-			}
+		myRouter.ProcBecomeReady(algorithme.procId, true);
+		
+		
+		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, algorithme.procId,algorithme.procId);
+		mr.setRoutingTable(myRouter.getMyRoute());
+		algorithme.sendRouteMessage(mr, -1);
+
+		log.logMsg("Proc-" + algorithme.procId + " : I am Ready");
+		// Stay awaiting while my routing table is not complete
+		while (myRouter.ready < algorithme.netSize) {
+
+			Door door = new Door();
+			algorithme.recoitExtendRouteMessage(door);
 		}
+		algorithme.iAmReady = true;
+		algorithme.notify();
 	}
 	
 	
-	private void listenLelanMessage(LelannMutualExclusion algo1, Door d){
+	private synchronized void listenLelanRouting(LelannMutualExclusion algorithme, Door d){
 		
-		Message m_rec = algo1.recoit(d);
-		if(m_rec instanceof TokenMessage){
-			
-			System.out.println(" Message type Proc id "+algo1.procId);
-			TokenMessage m = null;
-			try{
-				m =  (TokenMessage)m_rec;
-				
-			}catch(Exception e){
-				
-				System.out.println(" Mince "+e.getMessage());
-			}
-			
-			System.out.println(" Message type "+m.type);
-			switch (m.getMsgType()) {
+		
+		for (int i = 0; i < algo1.arity; i++) {
 
-				case TOKEN :
-					
-					System.out.println("Call send "+algo1.procId);
-					algo1.receiveTOKEN(m);
-					
-					break;
+			RouteMessage mr = new RouteMessage(MsgType.ROUTE, algorithme.procId);
+			boolean send = algorithme.envoiTo(i, mr);
+		}
 
-				default :
-					System.out.println("Error message type");
-			}
-			
+		int i = 0;
+		while (i < algorithme.arity) {
+
+			Door door = new Door();
+			RouteMessage mr = algorithme.recoitRoute(door);
+			myRouter.setDoorToMyRoute(mr.getProcId(), door.getNum());
+			myRouter.complete++;
+			i++;
 		}
-		else if(m_rec instanceof FormMessage){
-			
-			receiveFormeMessage(algo, m_rec,d.getNum());
-			
-		}else{
-			
-			if(m_rec instanceof ExtendRouteMessage ){
-				
-					System.out.println("Receive message ExtendRouteMessage");
-					
-			}else{
-				
-				System.out.println("Error message");
+		
+		// Stay awaiting while my routing table is not complete
+		while (myRouter.complete < algorithme.netSize) {
+
+			// Send my Routing table to my neighbors
+			if (algorithme.arity > 1) {
+
+				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,algorithme.procId, algorithme.procId);
+				mr.setRoutingTable(myRouter.getMyRoute());
+				algorithme.sendRouteMessage(mr, -1);
 			}
+
+			Door door = new Door();
+			algorithme.recoitExtendRouteMessage(door);
 		}
+		myRouter.ProcBecomeReady(algorithme.procId, true);
+		
+		
+		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, algorithme.procId,algorithme.procId);
+		mr.setRoutingTable(myRouter.getMyRoute());
+		algorithme.sendRouteMessage(mr, -1);
+
+		log.logMsg("Proc-" + algorithme.procId + " : I am Ready");
+		// Stay awaiting while my routing table is not complete
+		while (myRouter.ready < algorithme.netSize) {
+
+			Door door = new Door();
+			algorithme.recoitExtendRouteMessage(door);
+		}
+		algorithme.iAmReady = true;
+		algorithme.notify();
 	}
 	
-
-	private void receiveFormeMessage(Algorithm algo, Message m_, int door){
-		
-		FormMessage m = (FormMessage)m_;
-		if(algo instanceof LelannMutualExclusion){
-			
-			LelannMutualExclusion lelan = (LelannMutualExclusion)algo;
-			switch (m.getMsgType()) {
-
-				case FORME :
-					lelan.receiveFormMessage(m);
-					break;
 	
-				default :
-					System.out.println("Error message type");
-			}
+	private synchronized void listenerNaimiTreilRouting(NaimiTreilMutualExclusion algorithme, Door d){
+		
+		for (int i = 0; i < algorithme.arity; i++) {
+
+			RouteMessage mr = new RouteMessage(MsgType.ROUTE, algorithme.procId);
+			boolean send = algorithme.envoiTo(i, mr);
+		}
+
+		int i = 0;
+		while (i < algorithme.arity) {
+
+			Door door = new Door();
+			RouteMessage mr = algorithme.recoitRoute(door);
+			myRouter.setDoorToMyRoute(mr.getProcId(), door.getNum());
+			myRouter.complete++;
+			i++;
 		}
 		
-		else if(algo instanceof RicartAggrawalaMutualExclusion){
-			
-			RicartAggrawalaMutualExclusion ricart = (RicartAggrawalaMutualExclusion)algo;
-			switch (m.getMsgType()) {
+		// Stay awaiting while my routing table is not complete
+		while (myRouter.complete < algorithme.netSize) {
 
-				case FORME :
-					ricart.receiveFormMessage(m);
-					break;
-	
-				default :
-					System.out.println("Error message type");
+			// Send my Routing table to my neighbors
+			if (algorithme.arity > 1) {
+
+				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,algorithme.procId, algorithme.procId);
+				mr.setRoutingTable(myRouter.getMyRoute());
+				algorithme.sendRouteMessage(mr, -1);
 			}
-			
+
+			Door door = new Door();
+			algorithme.recoitExtendRouteMessage(door);
 		}
+		myRouter.ProcBecomeReady(algorithme.procId, true);
 		
+		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, algorithme.procId,algorithme.procId);
+		mr.setRoutingTable(myRouter.getMyRoute());
+		algorithme.sendRouteMessage(mr, -1);
+
+		// Stay awaiting while my routing table is not complete
+		while (myRouter.ready < algorithme.netSize) {
+
+			Door door = new Door();
+			algorithme.recoitExtendRouteMessage(door);
+		}
+		algorithme.iAmReady = true;
+		algorithme.notify();
 	}
 	
-	private void listenerNaimiTreilMessage(NaimiTreilMutualExclusion algo32, Door d){
-		
-		
-	}
+	
 }

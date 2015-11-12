@@ -12,6 +12,7 @@ import visidia.simulation.process.messages.Message;
 import Gui.Lanceur;
 import Gui.MoteurTest;
 import Listener.MessageListener;
+import Listener.RoutingListener;
 import Message.ExtendRouteMessage;
 import Message.FormMessage;
 import Message.MsgType;
@@ -29,12 +30,13 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	// Router
 	public MyRouter myRouter;
 	public int next = 0;
-	
+	public int arity = 0;
+	public int netSize = 0;
 	//
 	public int speed = 4;
 
 	// just for managin displaying routing table in the log
-	boolean iAmReady = false;
+	public boolean iAmReady = false;
 
 	private int H = 0; /* estampille locale */
 	private int HSC = 0; /* estampille de demande de section critique */
@@ -64,6 +66,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	MoteurTest motTest;
 	
 	MessageListener messageListener = null;
+	RoutingListener routing = null;
 
 	@Override
 	public Object clone() {
@@ -74,12 +77,11 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	@Override
 	public void init() {
 		// TODO Auto-generated method stub
-		Nrel = this.getNetSize();
+		Nrel = getNetSize();
+		netSize = getNetSize();
+		arity = getArity();
 		procId = getId();
 		int time = 0;
-		// Init routeMap
-		myRouter = new MyRouter(getNetSize());
-		myRouter.setDoorToMyRoute(getId(), -2);
 		log = new ProcLogger(procId, "Ricart");
 		
 		//Generateur aleatoire
@@ -87,19 +89,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		
 		/* Begin setting up route */
 		
-		setRoutingTable();
-		// attente que chaque que les messages aient le temps de se propager
-		try {
-			Thread.sleep(2500);
-		} catch (InterruptedException ie) {}
-
-		extendRoutingTable();
-		sayIamReady();
-		time = (1 + rand.nextInt(3)) * 1000;
-		try {
-			Thread.sleep(time);
-		} catch (InterruptedException ie) {
-		}
+		routing();
 		/* End setting up route */
 		
 		
@@ -154,54 +144,37 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	// Rules
 	// -------------------
 	
-	// Rule 0.1 : tell to all my neighbor where I am
-	synchronized void setRoutingTable() {
-
-		for (int i = 0; i < getArity(); i++) {
-
-			RouteMessage mr = new RouteMessage(MsgType.ROUTE, getId());
-			boolean send = this.sendTo(i, mr);
+	
+	public synchronized  void routing(){
+		
+		myRouter = new MyRouter(getNetSize());
+		myRouter.setDoorToMyRoute(getId(), -2);
+		
+		routing = new RoutingListener(this,log, myRouter);
+		routing.start();
+		while(!iAmReady){
+			
+			try{
+				this.wait();
+			} catch (InterruptedException e) {e.printStackTrace();}
 		}
-
-		int i = 0;
-		while (i < getArity()) {
-
-			Door d = new Door();
-			RouteMessage mr = recoitRoute(d);
-			myRouter.setDoorToMyRoute(mr.getProcId(), d.getNum());
-			myRouter.complete++;
-			i++;
-		}
-
+		System.out.println("YEP");
+		
+		try {
+			routing.sleep(1000);
+			routing.interrupt();
+		
+		} catch (InterruptedException e) {e.printStackTrace();}
+		
 	}
+
+	
 
 	// Access to receive function
 	public RouteMessage recoitRoute(final Door d) {
 
 		RouteMessage rm = (RouteMessage) receive(d);
 		return rm;
-	}
-
-	// Rule 0.2 : I need to extend my routing table
-	synchronized void extendRoutingTable() {
-
-		// Stay awaiting while my routing table is not complete
-		while (myRouter.complete < getNetSize()) {
-
-			// Send my Routing table to my neighbors
-			if (getArity() > 1) {
-
-				ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.TABLE,
-						getId(), procId);
-				mr.setRoutingTable(myRouter.getMyRoute());
-				sendRouteMessage(mr, -1);
-			}
-
-			Door d = new Door();
-			recoitExtendRouteMessage(d);
-		}
-		myRouter.ProcBecomeReady(procId, true);
-
 	}
 
 	// Access to receive function
@@ -252,26 +225,6 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			}
 
 		}
-	}
-
-	// Rule 0.3 : My routing table is complete and I'am waiting other proc to be
-	// ready like me
-	public synchronized void sayIamReady() {
-
-		ExtendRouteMessage mr = new ExtendRouteMessage(MsgType.READY, getId(),
-				procId);
-		mr.setRoutingTable(myRouter.getMyRoute());
-		sendRouteMessage(mr, -1);
-
-		log.logMsg("Proc-" + procId + " : I am Ready");
-		// Stay awaiting while my routing table is not complete
-		while (myRouter.ready < getNetSize()) {
-
-			Door d = new Door();
-			recoitExtendRouteMessage(d);
-		}
-		iAmReady = true;
-		displayState();
 	}
 
 	/* Rule 1 : processus ask for critical section */
@@ -413,6 +366,11 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 
 		Message m = receive(d);
 		return m;
+	}
+	
+	public boolean envoiTo(int door, Message message){
+		
+		return sendTo(door,message);
 	}
 	
 	// Display state
