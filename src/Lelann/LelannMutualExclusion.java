@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.Random;
 
-import logger.ProcLogger;
+import logger.Logger;
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
@@ -53,7 +53,7 @@ public class LelannMutualExclusion extends Algorithm {
 	boolean token = false;
 
 	// logger
-	ProcLogger log;
+	String logFile = null;
 
 	// Critical section thread
 	MessageListener messageListener = null;
@@ -82,7 +82,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 		procId = getId();
 		nextProcId = getNextProcId();
-		log = new ProcLogger(procId, "Lelann");
+		logFile = "lalan_proc-"+procId;
 
 		Random rand = new Random();
 		netSize = getNetSize();
@@ -91,16 +91,16 @@ public class LelannMutualExclusion extends Algorithm {
 		// Init routeMap
 		routing();
 
-		log.logMsg("Proc-" + procId + " I am ready to begin " + myRouter.ready);
+		Logger.write(logFile,"Proc-" + procId + " I am ready to begin " + myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
-		log.logMsg("Proc-" + procId
+		Logger.write(logFile,"Proc-" + procId
 				+ " I launch the white board named Tableau Blanc Proc" + procId);
 		motTest = new MoteurTest();
 		lanceur.start();
 
 		messageListener = new MessageListener(this);
 		messageListener.start();
-		log.logMsg("Proc-" + procId + " I start my message Listerner");
+		Logger.write(logFile,"Proc-" + procId + " I start my message Listerner");
 
 		if (procId == 0) {
 
@@ -110,9 +110,9 @@ public class LelannMutualExclusion extends Algorithm {
 			boolean sent = sendTo(next, tm);
 			if (!sent) {
 
-				log.logMsg("Proc-" + procId + " Unable to start process");
+				Logger.write(logFile,"Proc-" + procId + " Unable to start process");
 			}
-			log.logMsg("Proc-" + procId
+			Logger.write(logFile,"Proc-" + procId
 					+ " I start the prcess by sending token to Proc-"
 					+ nextProcId + " on door " + next);
 
@@ -122,11 +122,11 @@ public class LelannMutualExclusion extends Algorithm {
 
 			// Wait for some time
 			int time = (3 + rand.nextInt(10)) * speed * 1000;
-			log.logMsg("Proc-" + procId + ":  wait for " + time);
+			Logger.write(logFile,"Proc-" + procId + ":  wait for " + time);
 			try {
 				Thread.sleep(time);
 			} catch (InterruptedException ie) {
-				log.logMsg("Proc-" + procId + " : Error" + ie.getMessage());
+				Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
 			}
 
 			// Try to access critical section
@@ -162,7 +162,7 @@ public class LelannMutualExclusion extends Algorithm {
 		myRouter = new MyRouter(getNetSize());
 		myRouter.setDoorToMyRoute(getId(), -2);
 		
-		routing = new RoutingListener(this,log, myRouter);
+		routing = new RoutingListener(this, myRouter);
 		routing.start();
 		while(!iAmReady){
 			
@@ -189,7 +189,7 @@ public class LelannMutualExclusion extends Algorithm {
 			p1 = motTest.getPoint1();
 			p2 = motTest.getPoint2();
 			typeForm = motTest.getChoixForme();
-			log.logMsg("Proc-" + procId
+			Logger.write(logFile,"Proc-" + procId
 					+ " : Create form, wait critical section  befor drawing");
 			try {
 				this.wait();
@@ -214,7 +214,7 @@ public class LelannMutualExclusion extends Algorithm {
 						getNextProcId(), p1, p2, tailleForm, typeForm, bg, fg);
 				boolean sent = sendTo(next, form);
 
-				log.logMsg("Proc-" + procId
+				Logger.write(logFile,"Proc-" + procId
 						+ " : Receive token, get in critical section, "
 						+ "drawing form and send my form to proc-"
 						+ getNextProcId() + " on door " + next);
@@ -222,7 +222,7 @@ public class LelannMutualExclusion extends Algorithm {
 
 			} else {
 
-				log.logMsg("proc-" + procId
+				Logger.write(logFile,"proc-" + procId
 						+ " : Receive token, do not need it, I forward it to "
 						+ getNextProcId() + " on door " + next);
 
@@ -233,7 +233,7 @@ public class LelannMutualExclusion extends Algorithm {
 		} else {
 
 			next = myRouter.getDoorOnMyRoute(tm.idProc);
-			log.logMsg("proc-" + procId
+			Logger.write(logFile,"proc-" + procId
 					+ " : Receive token but do not need it, on door " + next);
 			boolean sent = sendTo(next, tm);
 		}
@@ -243,7 +243,7 @@ public class LelannMutualExclusion extends Algorithm {
 	// different of the owner of the form
 	synchronized public void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
-		log.logMsg("Proc-" + procId + ": Receive form of " + form.procId);
+		Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
 		if (form.nextProcId == procId) {
 
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
@@ -276,7 +276,7 @@ public class LelannMutualExclusion extends Algorithm {
 		token = false;
 		TokenMessage tm = new TokenMessage(MsgType.TOKEN, getNextProcId());
 		boolean sent = sendTo(next, tm);
-		log.logMsg("proc-" + procId
+		Logger.write(logFile,"proc-" + procId
 				+ " : Leave Critical Section send token to " + getNextProcId()
 				+ " on door " + next);
 		displayState();
@@ -400,7 +400,7 @@ public class LelannMutualExclusion extends Algorithm {
 			}
 
 		}
-		log.logMsg("procId-" + procId + ": " + state);
+		Logger.write(logFile,"procId-" + procId + ": " + state);
 	}
 
 }

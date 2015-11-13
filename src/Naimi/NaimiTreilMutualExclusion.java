@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.util.Random;
 
-import logger.ProcLogger;
+import logger.Logger;
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
 import visidia.simulation.process.messages.Message;
@@ -54,7 +54,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 
 
 	// logger
-	ProcLogger log;
+	String  logFile = null;
 
 	// Critical section thread
 	MessageListener messageListener = null;
@@ -74,21 +74,23 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	//
 	// Nodes' code
 	//
+	@SuppressWarnings("static-access")
 	@Override
 	public void init() {
 		
 		procId = getId();
 		netSize = getNetSize();
 		arity = getArity();
-		// Create logger
-		log = new ProcLogger(procId, "Naimi");
+		
+		// Create logger name
+		logFile = "naimi_proc-"+procId;
 		
 		/* Begin setting up route */
 		routing();
 		/* End setting up route */
 		
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
-		log.logMsg("Proc-" + procId+ " I launch the white board named Tableau Blanc Proc" + procId);
+		Logger.write(logFile,"Proc-" + procId+ " I launch the white board named Tableau Blanc Proc" + procId);
 		motTest = new MoteurTest();
 		lanceur.start();
 		
@@ -109,11 +111,11 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 			
 			// Wait for some time
 			int time = (3 + rand.nextInt(10)) * speed * 1000;
-			log.logMsg("Proc-" + procId + ":  wait for " + time);
+			Logger.write(logFile,"Proc-" + procId + ":  wait for " + time);
 			try {
 				Thread.sleep(time);
 			} catch (InterruptedException ie) {
-				log.logMsg("Proc-" + procId + " : Error" + ie.getMessage());
+				Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
 			}
 			drawNewForm();
 		}
@@ -126,7 +128,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		myRouter = new MyRouter(getNetSize());
 		myRouter.setDoorToMyRoute(getId(), -2);
 		
-		routing = new RoutingListener(this,log, myRouter);
+		routing = new RoutingListener(this, myRouter);
 		routing.start();
 		while(!iAmReady){
 			
@@ -150,7 +152,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		p1 = motTest.getPoint1();
 		p2 = motTest.getPoint2();
 		typeForm = motTest.getChoixForme();
-		log.logMsg("Proc-" + procId
+		Logger.write(logFile,"Proc-" + procId
 				+ " : Create form, wait critical section  befor drawing");
 		askCriticalSection();
 		
@@ -158,11 +160,11 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		Color fg = Color.red;
 		lanceur.ajouteForme(p1, p2, typeForm);
 		sendForm();
-		log.logMsg("Proc-" + procId + ":  Critical Section, wait for " + 2500);
+		Logger.write(logFile,"Proc-" + procId + ":  Critical Section, wait for " + 2500);
 		try {
 			Thread.sleep(2500);
 		} catch (InterruptedException ie) {
-			log.logMsg("Proc-" + procId + " : Error" + ie.getMessage());
+			Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
 		}
 		endCriticalSection();
 		
@@ -336,14 +338,14 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		System.out.println("Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
 		if (form.nextProcId == procId) {
 			
-			log.logMsg("Proc-" + procId + ": Receive form of " + form.procId);
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
 			
 		} 
 		else {
 
 			int door = myRouter.getDoorOnMyRoute(form.nextProcId);
-			log.logMsg("Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
 			sendTo(door, form);
 		}
 

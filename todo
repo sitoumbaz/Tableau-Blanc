@@ -1,13 +1,10 @@
 --------------------------------------  A FAIRE :  ----------------------------------------------------------------------------- 
 
-Ecrire des messages pertinents dans le logger
+
 
 Faire le squelette du rapport
 
-Modifier tableauBlancUI.java pour pouvoir faire des tests manuel :
-	1) ajouter un bouton "demande de sc"
-	2) ajouter un bouton "liberer sc"
-
+Ricard : mettre en place un bon mecanisme de simulation 
 
 
 ------------------------------------- FAIT : ---------------------------------------------------------------------------------
@@ -37,3 +34,5 @@ Faire un moteur de tests :
 Implementer ricard,
 
 Implementer naimi
+
+Ecrire des messages pertinents dans le logger

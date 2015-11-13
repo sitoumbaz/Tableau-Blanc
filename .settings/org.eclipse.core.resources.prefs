@@ -1,3 +1,6 @@
+=\=\=\=\=\=\=
+<<<<<<<=HEAD
+>>>>>>>=cff63807dd889cf88d6de608e018dbc9df336a14
 eclipse.preferences.version=1
 encoding//src/Gui/FormeElipse.java=UTF-8
 encoding//src/Gui/FormePixel.java=UTF-8
@@ -8,9 +11,6 @@ encoding//src/Gui/TableauBlanc.java=UTF-8
 encoding//src/Gui/TableauBlancUI.java=UTF-8
 encoding//src/Lelann/LelannMutualExclusion.java=UTF-8
 encoding//src/Message/MsgType.java=UTF-8
-<<<<<<< HEAD
-encoding//src/RicartAggrawala/RicartAggrawalaMutualExclusion.java=UTF-8
-encoding//src/logger/ProcLogger.java=UTF-8
-=======
 encoding//src/Naimi/NaimiTreilMutualExclusion.java=UTF-8
->>>>>>> cff63807dd889cf88d6de608e018dbc9df336a14
+encoding//src/RicartAggrawala/RicartAggrawalaMutualExclusion.java=UTF-8
+encoding//src/logger/Logger.java=UTF-8

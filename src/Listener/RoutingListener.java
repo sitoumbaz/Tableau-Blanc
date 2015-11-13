@@ -1,19 +1,13 @@
 package Listener;
-
-import logger.ProcLogger;
 import Lelann.LelannMutualExclusion;
 import Message.ExtendRouteMessage;
-import Message.FormMessage;
 import Message.MsgType;
 import Message.RouteMessage;
-import Message.RulesMessage;
-import Message.TokenMessage;
 import Naimi.NaimiTreilMutualExclusion;
 import RicartAggrawala.RicartAggrawalaMutualExclusion;
 import Router.MyRouter;
 import visidia.simulation.process.algorithm.Algorithm;
 import visidia.simulation.process.messages.Door;
-import visidia.simulation.process.messages.Message;
 
 // Reception thread
 public class RoutingListener extends Thread {
@@ -21,12 +15,10 @@ public class RoutingListener extends Thread {
 	LelannMutualExclusion algo1;
 	RicartAggrawalaMutualExclusion algo2;
 	NaimiTreilMutualExclusion algo3;
-	ProcLogger log;
 	MyRouter myRouter;
 	
-	public RoutingListener(Algorithm a, ProcLogger log, MyRouter myRouter) {
+	public RoutingListener(Algorithm a, MyRouter myRouter) {
 		
-		this.log = log;
 		this.myRouter = myRouter;
 		
 		if(a instanceof LelannMutualExclusion){
@@ -58,7 +50,6 @@ public class RoutingListener extends Thread {
 				
 				listenLelanRouting(algo1, d);
 			}
-			
 			
 		}
 		
@@ -123,7 +114,6 @@ public class RoutingListener extends Thread {
 		mr.setRoutingTable(myRouter.getMyRoute());
 		algorithme.sendRouteMessage(mr, -1);
 
-		log.logMsg("Proc-" + algorithme.procId + " : I am Ready");
 		// Stay awaiting while my routing table is not complete
 		while (myRouter.ready < algorithme.netSize) {
 
@@ -175,7 +165,6 @@ public class RoutingListener extends Thread {
 		mr.setRoutingTable(myRouter.getMyRoute());
 		algorithme.sendRouteMessage(mr, -1);
 
-		log.logMsg("Proc-" + algorithme.procId + " : I am Ready");
 		// Stay awaiting while my routing table is not complete
 		while (myRouter.ready < algorithme.netSize) {
 

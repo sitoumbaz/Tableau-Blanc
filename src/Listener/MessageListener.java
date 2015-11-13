@@ -19,7 +19,6 @@ public class MessageListener extends Thread {
 	RicartAggrawalaMutualExclusion algo2;
 	NaimiTreilMutualExclusion algo3;
 	
-	
 	public MessageListener(final Algorithm a) {
 		
 		algo = a;
