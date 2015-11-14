@@ -41,6 +41,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	
 	// Router
 	public MyRouter myRouter;
+	public String strRoute = null;
 
 	// Tableau blanc
 	private Lanceur lanceur;
@@ -136,7 +137,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 				this.wait();
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
-		System.out.println("YEP");
+		writeRoute();
 		try {
 			
 			routing.sleep(1000);
@@ -177,14 +178,14 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	public synchronized void askCriticalSection(){
 		
 		SCI = true;
-		System.out.println("Proc-"+procId+" : Need critical section ");
+		Logger.write(logFile,"Proc-"+procId+" : Need critical section ");
 		if(owner != -2){
 			
 			RulesMessage m = new RulesMessage(MsgType.REQ,this.procId, owner,0);
 			int door = myRouter.getDoorOnMyRoute(owner);
 			boolean sent = sendTo(door,m);
 			owner = -2;
-			System.out.println("Proc-"+procId+" : Send REQ to owner Proc-"+owner);
+			Logger.write(logFile,"Proc-"+procId+" : Send REQ to owner Proc-"+owner);
 			while(!token){
 				
 				try {
@@ -201,13 +202,13 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		
 		int door = myRouter.getDoorOnMyRoute(m.procRecipient);
 		if(m.procRecipient == procId){
-			System.out.println("Proc-"+procId+" : Receive REQ of Proc-"+m.procId);
+			Logger.write(logFile,"Proc-"+procId+" : Receive REQ of Proc-"+m.procId);
 			if(owner == -2){
 				
 				if(SCI){
 					
 					next = m.procId;
-					System.out.println("Proc-"+procId+" : Add Proc-"+m.procId+" as the next Proc to be elected");
+					Logger.write(logFile,"Proc-"+procId+" : Add Proc-"+m.procId+" as the next Proc to be elected");
 				}
 				else{
 					
@@ -215,12 +216,12 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 					RulesMessage m_jeton = new RulesMessage(MsgType.TOKEN, procId, m.procId,0);
 					door = myRouter.getDoorOnMyRoute(m.procId);
 					boolean send = sendTo(door,m_jeton);
-					System.out.println("Proc-"+procId+" : Send TOKEN to Proc-"+m.procId);
+					Logger.write(logFile,"Proc-"+procId+" : Send TOKEN to Proc-"+m.procId);
 				}
 			}
 			else{
 				
-				System.out.println("Proc-"+procId+" : I am not the owner, I send REQ to owner Proc-"+owner);
+				Logger.write(logFile,"Proc-"+procId+" : I am not the owner, I send REQ to owner Proc-"+owner);
 				door = myRouter.getDoorOnMyRoute(owner);
 				boolean send = sendTo(door,m);
 			}
@@ -243,7 +244,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		int door = myRouter.getDoorOnMyRoute(m.procRecipient);
 		if(procId == m.procRecipient){
 			
-			System.out.println("Proc-"+procId+" : Receive TOKEN Jeton :) ");
+			Logger.write(logFile,"Proc-"+procId+" : Receive TOKEN Jeton :) ");
 			token = true;
 			notify();
 		}
@@ -258,13 +259,13 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		
 		SCI = false;
 		token = false;
-		System.out.println("Proc-"+procId+" : "+next);
+		Logger.write(logFile,"Proc-"+procId+" : "+next);
 		if(next != -2 && next != procId){
 			
 			int door = myRouter.getDoorOnMyRoute(next);
 			RulesMessage m_jeton = new RulesMessage(MsgType.TOKEN, procId, next,0);
 			boolean send = sendTo(door,m_jeton);
-			System.out.println("Proc-"+procId+" : Release Critical Section and Send TOKEN to Proc-"+next);
+			Logger.write(logFile,"Proc-"+procId+" : Release Critical Section and Send TOKEN to Proc-"+next);
 			next = -2;
 		}
 		
@@ -335,7 +336,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	// different of the owner of the form
 	synchronized public void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
-		System.out.println("Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
+		Logger.write(logFile,"Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
 		if (form.nextProcId == procId) {
 			
 			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
@@ -379,5 +380,15 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	public boolean envoiTo(int door, Message message){
 		
 		return sendTo(door,message);
+	}
+	
+	private void writeRoute(){
+		
+		String str = "#### Route of Proc-" + procId + " ######\n";
+		for (int i = 0; i < getNetSize(); i++) {
+
+			str += "Door " + myRouter.getDoorOnMyRoute(i)+ " connected to procId-" + i + "\n";
+		}
+		Logger.write(logFile,str);
 	}
 }

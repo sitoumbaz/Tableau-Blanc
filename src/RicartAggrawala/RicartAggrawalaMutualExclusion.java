@@ -29,6 +29,8 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 
 	// Router
 	public MyRouter myRouter;
+	public String strRoute = null;
+	
 	public int next = 0;
 	public int arity = 0;
 	public int netSize = 0;
@@ -105,7 +107,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		Logger.write(logFile,"Proc-" + procId + " I start my message Listerner");
 		if (procId == 0) {
 	
-			System.out.println("Proc-" + procId + ": Try to access critical section");
+			Logger.write(logFile,"Proc-" + procId + ": Try to access critical section");
 			// Try to access critical section
 			R = true;
 			this.askCriticalSection();
@@ -122,13 +124,13 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			time = (4 + rand.nextInt(10)) * 1000;
 			Logger.write(logFile,"Proc-" + procId + ":  wait for " + time);
 			try {
-				System.out.println("Proc-" + procId + ": time "+time);
+				Logger.write(logFile,"Proc-" + procId + ": time "+time);
 				Thread.sleep(time);
 			} catch (InterruptedException ie) {
 				Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
 			}
 			
-			System.out.println("Proc-" + procId + ": Try to access critical section");
+			Logger.write(logFile,"Proc-" + procId + ": Try to access critical section");
 			// Try to access critical section
 			R = true;
 			this.askCriticalSection();
@@ -158,13 +160,14 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 				this.wait();
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
-		System.out.println("YEP");
 		
+		writeRoute();
 		try {
 			routing.sleep(1000);
 			routing.interrupt();
 		
 		} catch (InterruptedException e) {e.printStackTrace();}
+		
 		
 	}
 
@@ -232,7 +235,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		
 		HSC = H + 1;
 		Nrel = getNetSize()-1;
-		System.out.println("Proc-"+procId+" Je suis ici  getNetSize() = "+getNetSize());
+		Logger.write(logFile,"Proc-"+procId+" Je suis ici  getNetSize() = "+getNetSize());
 		for(int i=0; i<getNetSize(); i++){
 			
 			if(i != procId){
@@ -240,7 +243,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 				int door = myRouter.getDoorOnMyRoute(i);
 				RulesMessage ms = new RulesMessage(MsgType.REQ, procId,i,HSC);
 				boolean send = sendTo(door, ms);
-				System.out.println("Proc-" + procId + ": Send REQ to "+ms.procRecipient+" on door "+door);
+				Logger.write(logFile,"Proc-" + procId + ": Send REQ to "+ms.procRecipient+" on door "+door);
 			}
 		}
 		
@@ -267,15 +270,15 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			
 			door = myRouter.getDoorOnMyRoute(ms.procId);
 			H = Math.max(H, ms.H) + 1;
-			System.out.println("Proc-"+procId+" Receive REQ of proc-"+ms.procId+" on door "+door+"");
+			Logger.write(logFile,"Proc-"+procId+" Receive REQ of proc-"+ms.procId+" on door "+door+"");
 			if(R && ((HSC < ms.H) || ((HSC == ms.H) && procId < ms.procId))){
 				
-				System.out.println("Proc-"+procId+" Adding proc-"+ms.procId+" in my queue list");
+				Logger.write(logFile,"Proc-"+procId+" Adding proc-"+ms.procId+" in my queue list");
 				X.put(ms.procId,door);
 			}
 			else{
 				
-				System.out.println("Proc-"+procId+" I can immediatly send the REL to proc-"+ms.procId+"");
+				Logger.write(logFile,"Proc-"+procId+" I can immediatly send the REL to proc-"+ms.procId+"");
 				RulesMessage mrel = new RulesMessage(MsgType.REL, procId,ms.procId,0);
 				this.sendTo(door, mrel);
 			}
@@ -324,10 +327,10 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	void endCriticalSection() {
 
 		
-		System.out.println("Proc-"+procId+" End critical section");
+		Logger.write(logFile,"Proc-"+procId+" End critical section");
 		if(X.size() == 0){
 			
-			System.out.println("Proc-"+procId+" No message received for asking critical section");
+			Logger.write(logFile,"Proc-"+procId+" No message received for asking critical section");
 			return;
 		}
 		
@@ -338,7 +341,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 				RulesMessage mrel = new RulesMessage(MsgType.REL, procId,i,0);
 				int door = this.myRouter.getDoorOnMyRoute(i);
 				sendTo(door, mrel);
-				System.out.println("Proc-"+procId+" Send REL to "+mrel.procRecipient+" on door "+door);
+				Logger.write(logFile,"Proc-"+procId+" Send REL to "+mrel.procRecipient+" on door "+door);
 				X.remove(i);
 			}
 		}
@@ -347,7 +350,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	
 	public synchronized void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
-		System.out.println("Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
+		Logger.write(logFile,"Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
 		if (form.nextProcId == procId) {
 			
 			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
@@ -373,29 +376,14 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		return sendTo(door,message);
 	}
 	
-	// Display state
-	void displayState() {
+	private void writeRoute(){
+		
+		String str = "#### Route of Proc-" + procId + " ######\n";
+		for (int i = 0; i < getNetSize(); i++) {
 
-		String state = new String("\n");
-		state = state + "--------------------------------------\n";
-		/*if (inCritical)
-			state = state + "** ACCESS CRITICAL **\n";
-		else if (waitForCritical)
-			state = state + "* WAIT FOR *\n";
-		else
-			state = state + "-- SLEEPING --\n";
-		*/
-		if (myRouter.ready == this.getNetSize()) {
-
-			iAmReady = false;
-			state = state + "#### Route processus " + getId() + " ######\n";
-			for (int i = 0; i < getNetSize(); i++) {
-
-				state = state + "Door " + myRouter.getDoorOnMyRoute(i)
-						+ " connected to procId-" + i + "\n";
-			}
-
+			str += "Door " + myRouter.getDoorOnMyRoute(i)+ " connected to procId-" + i + "\n";
 		}
-		Logger.write(logFile,"procId-" + procId + ": " + state);
+		Logger.write(logFile,str);
 	}
+	
 }

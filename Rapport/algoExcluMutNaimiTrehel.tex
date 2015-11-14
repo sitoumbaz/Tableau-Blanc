@@ -1,0 +1,104 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[frenchb]{babel}
+
+\usepackage{a4wide}
+
+\usepackage[lined,longend,algoruled,titlenumbered,french,boxed]{algorithm2e}
+\renewcommand{\thealgocf}{}
+
+\begin{document}
+
+\begin{titlepage}
+  
+  \vspace*{-15ex}
+  \begin{center}
+    {\Large\bf M2 Informatique - Algorithmique Distribuée}\\
+    Université de Franche-Comté
+  \end{center}
+  \vspace{1ex}
+
+  \begin{small}
+  \begin{algorithm}[H]
+    \DontPrintSemicolon
+    \BlankLine
+    \textbf{Variables utilisées par chaque processus $P_{i}$:}\;
+
+      \quad $owner_i$: l'identifiant du site supposé posséder le jeton\;
+      \quad $next_i$: l'identifiant du site à qui envoyer le jeton,
+      initialisé à nil \;
+      \quad $jeton_i$ : booléen indiquant si le site possède le jeton,
+      initialisé à faux \;
+      \quad $SC_i$: booléen indiquant si le site a demandé la SC,
+      initialisé à faux\;
+
+    \BlankLine
+    
+    \textbf{Messages utilisés:}\;
+    \quad REQ(j) : demande d'entrée en SC\;
+    \quad JETON : message de permission \;
+    \BlankLine
+    
+    {\bf Règle 1}: {\it Initialisation de $P_i$}\;
+    \Begin{
+      \eIf {elected\-node = $i$} {
+        $jeton_i \leftarrow$ true \;
+        $owner_i \leftarrow$ nil \;
+      } {
+        $owner_i \leftarrow$ elected\-node\;
+      }
+    }
+    \BlankLine
+    
+    {\bf Règle 2}: {\it $P_i$ demande l'accès à la Section Critique}\;
+    \Begin{
+      $SC_i \leftarrow$ true \;
+      \If { $owner_i \neq$  nil} {
+        \textbf{Envoie} REQ(i) à $owner_i$ \;
+        $owner_i \leftarrow$ nil \;
+        \textbf{Attendre} $jeton_i$ = true\;
+      }
+      \emph{Entree en SC} \;
+    }
+    \BlankLine
+    
+    {\bf Règle 3}: {\it $P_i$ reçoit le message REQ(k) de j}\;
+    \Begin{
+      \eIf { $owner_i = nil$ } { % alors
+        \eIf {$SC_i = true$ } { % alors
+          $next_i \leftarrow$ k
+        }{ % sinon
+          $jeton_i \leftarrow$ false \;
+          \textbf{Envoie} JETON à k \;
+        } %fsi
+      } 
+      { % sinon
+        \textbf{Envoie} REQ(k) à owner \;
+      } % fsi
+      $owner_i \leftarrow$ k\;
+    }
+    \BlankLine
+    
+    \textbf{Règle 4} : {\it $P_i$ reçoit le message JETON de j}\;
+    \Begin{
+      $jeton_i \leftarrow$ true \;
+    }
+    
+    \textbf{Règle 5} : {\it $P_i$ sort de SC}\;
+    \Begin{
+      $SC_i \leftarrow$ false \;
+      \If { $next_i \neq$ nil } {
+        \textbf{Envoie} JETON à $next_i$ \;
+        $jeton_i \leftarrow$ false \;
+        $next_i \leftarrow$ nil \;
+      }
+    }
+    \caption{Exclusion mutuelle de Naimi-Tréhel}
+  \end{algorithm}
+  \end{small}
+\end{titlepage}
+\end{document}
+

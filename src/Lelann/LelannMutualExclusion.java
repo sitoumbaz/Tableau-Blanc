@@ -34,6 +34,7 @@ public class LelannMutualExclusion extends Algorithm {
 	public int speed = 4;
 	public int netSize = 0;
 	public int arity = 0;
+	public String strRoute = null;
 
 	// just for managin displaying routing table in the log
 	public boolean iAmReady = false;
@@ -91,7 +92,6 @@ public class LelannMutualExclusion extends Algorithm {
 		// Init routeMap
 		routing();
 
-		Logger.write(logFile,"Proc-" + procId + " I am ready to begin " + myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
 		Logger.write(logFile,"Proc-" + procId
 				+ " I launch the white board named Tableau Blanc Proc" + procId);
@@ -170,7 +170,7 @@ public class LelannMutualExclusion extends Algorithm {
 				this.wait();
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
-		System.out.println("YEP");
+		writeRoute();
 		try {
 			
 			routing.sleep(1000);
@@ -178,13 +178,14 @@ public class LelannMutualExclusion extends Algorithm {
 		
 		} catch (InterruptedException e) {e.printStackTrace();}
 		
+		
 	}
 
 	// Rule 3 : ask for critical section
 	synchronized void askForCritical() {
 
 		while (!token) {
-			displayState();
+	
 			motTest.creerForme();
 			p1 = motTest.getPoint1();
 			p2 = motTest.getPoint2();
@@ -207,7 +208,6 @@ public class LelannMutualExclusion extends Algorithm {
 				lanceur.ajouteForme(p1, p2, typeForm);
 				next = myRouter.getDoorOnMyRoute(getNextProcId());
 				token = true;
-				displayState();
 				Color bg = Color.blue;
 				Color fg = Color.red;
 				FormMessage form = new FormMessage(MsgType.FORME, procId,
@@ -279,7 +279,6 @@ public class LelannMutualExclusion extends Algorithm {
 		Logger.write(logFile,"proc-" + procId
 				+ " : Leave Critical Section send token to " + getNextProcId()
 				+ " on door " + next);
-		displayState();
 	}
 
 	// Determine the next proc id
@@ -376,31 +375,17 @@ public class LelannMutualExclusion extends Algorithm {
 		
 		return sendTo(door,message);
 	}
+	
+	
+	private void writeRoute(){
+		
+		String str = "#### Route of Proc-" + procId + " ######\n";
+		for (int i = 0; i < getNetSize(); i++) {
 
-	// Display state
-	void displayState() {
-
-		String state = new String("\n");
-		state = state + "--------------------------------------\n";
-		if (inCritical)
-			state = state + "** ACCESS CRITICAL **\n";
-		else if (waitForCritical)
-			state = state + "* WAIT FOR *\n";
-		else
-			state = state + "-- SLEEPING --\n";
-
-		if (myRouter.ready == this.getNetSize()) {
-
-			iAmReady = false;
-			state = state + "#### Route processus " + getId() + " ######\n";
-			for (int i = 0; i < getNetSize(); i++) {
-
-				state = state + "Door " + myRouter.getDoorOnMyRoute(i)
-						+ " connected to procId-" + i + "\n";
-			}
-
+			str += "Door " + myRouter.getDoorOnMyRoute(i)+ " connected to procId-" + i + "\n";
 		}
-		Logger.write(logFile,"procId-" + procId + ": " + state);
+		Logger.write(logFile,str);
 	}
+
 
 }
