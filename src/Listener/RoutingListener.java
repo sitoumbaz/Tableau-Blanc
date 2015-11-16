@@ -11,12 +11,23 @@ import visidia.simulation.process.messages.Door;
 
 // Reception thread
 public class RoutingListener extends Thread {
-
+	
+	/** Init Instances of principal Algorithme used in the project*/
 	LelannMutualExclusion algo1;
 	RicartAggrawalaMutualExclusion algo2;
 	NaimiTreilMutualExclusion algo3;
+	
+	/** Init Instances of MyRouter class */
 	MyRouter myRouter;
 	
+	
+	/**
+	 * Constructor
+	 * @return void 
+	 * @param instance of Algorithm class
+	 * @param instance of MyRouter class
+	 * 
+	 */
 	public RoutingListener(Algorithm a, MyRouter myRouter) {
 		
 		this.myRouter = myRouter;
@@ -72,12 +83,20 @@ public class RoutingListener extends Thread {
 		}
 	}
 	
+	
+	/**
+	 * Function which allow managing Message Rules of Routing table process
+	 * @return void 
+	 * @param instance of RicartAggrawalaMutualExclusion class
+	 * @param instance of Door class
+	 * 
+	 */
+	
 	private synchronized void listenRicartAggrawalaRouting(RicartAggrawalaMutualExclusion algorithme, Door d){
 		
 		// Send message Route
 		for (int i = 0; i < algorithme.arity; i++) {
 
-			System.out.println("ICI"+i);
 			RouteMessage mr = new RouteMessage(MsgType.ROUTE, algorithme.procId);
 			boolean send = algorithme.envoiTo(i, mr);
 		}
@@ -125,20 +144,31 @@ public class RoutingListener extends Thread {
 	}
 	
 	
+	/**
+	 * Function which allow managing Message Rules of Routing table process
+	 * @return void 
+	 * @param instance of LelannMutualExclusion class
+	 * @param instance of Door class
+	 * 
+	 */
 	private synchronized void listenLelanRouting(LelannMutualExclusion algorithme, Door d){
 		
 		
+		/** Send ROUTE message to all my neighbors */
 		for (int i = 0; i < algo1.arity; i++) {
 
 			RouteMessage mr = new RouteMessage(MsgType.ROUTE, algorithme.procId);
 			boolean send = algorithme.envoiTo(i, mr);
 		}
-
+		
+		/** Wait receiving also ROUTE message from all my neighbors */
 		int i = 0;
 		while (i < algorithme.arity) {
 
 			Door door = new Door();
 			RouteMessage mr = algorithme.recoitRoute(door);
+			
+			/** For each ROUTE message receiving, I add in my table proc-Id and the door corresponding */
 			myRouter.setDoorToMyRoute(mr.getProcId(), door.getNum());
 			myRouter.complete++;
 			i++;
@@ -176,6 +206,13 @@ public class RoutingListener extends Thread {
 	}
 	
 	
+	/**
+	 * Function which allow managing Message Rules of Routing table process
+	 * @return void 
+	 * @param instance of NaimiTreilMutualExclusion class
+	 * @param instance of Door class
+	 * 
+	 */
 	private synchronized void listenerNaimiTreilRouting(NaimiTreilMutualExclusion algorithme, Door d){
 		
 		for (int i = 0; i < algorithme.arity; i++) {
@@ -223,6 +260,5 @@ public class RoutingListener extends Thread {
 		algorithme.iAmReady = true;
 		algorithme.notify();
 	}
-	
 	
 }

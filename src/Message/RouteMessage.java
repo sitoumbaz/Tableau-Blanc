@@ -3,8 +3,11 @@ package Message;
 import visidia.simulation.process.messages.Message;
 
 public class RouteMessage extends Message {
-
+	
+	/** The type of the message, in this case the type is ROUTE */
 	MsgType type;
+	
+	/** The proc-Id of the message creator */
 	int procId;
 
 	public RouteMessage(final MsgType t, final int id) {

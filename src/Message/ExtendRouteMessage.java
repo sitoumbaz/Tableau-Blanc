@@ -8,9 +8,14 @@ public class ExtendRouteMessage extends Message {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	/** The type of the message  */
 	MsgType type;
-
+	
+	/** The proc-Id to find  */
 	int ProcIdToFind;
+	
+	/** The routing table  */
 	int routingTable[];
 
 	public int[] getRoutingTable() {

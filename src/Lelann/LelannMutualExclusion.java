@@ -122,41 +122,23 @@ public class LelannMutualExclusion extends Algorithm {
 
 			// Wait for some time
 			int time = (3 + rand.nextInt(10)) * speed * 1000;
-			Logger.write(logFile,"Proc-" + procId + ":  wait for " + time);
-			try {
+			try{
+				
 				Thread.sleep(time);
-			} catch (InterruptedException ie) {
-				Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
-			}
-
-			// Try to access critical section
-			waitForCritical = true;
-			askForCritical();
-
-			// Access critical
-			waitForCritical = false;
-			inCritical = true;
-
-			// displayState();
-
-			// Simulate critical resource use
-			time = (1 + rand.nextInt(3)) * 1000;
-			try {
-				Thread.sleep(time);
-			} catch (InterruptedException ie) {
-			}
-
-			// Release critical use
-			inCritical = false;
-			endCriticalUse();
+			} 
+			catch (InterruptedException ie) { Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());}
+			drawNewForm();
 
 		}
 
 	}
-	// --------------------
-	// Rules
-	// -------------------
+	
 
+	/**
+	 * Synchronized function which allow to set up 
+	 * the routing table of each processus
+	 * @return void
+	 */
 	public synchronized  void routing(){
 		
 		myRouter = new MyRouter(getNetSize());
@@ -181,78 +163,120 @@ public class LelannMutualExclusion extends Algorithm {
 		
 	}
 
-	// Rule 3 : ask for critical section
+	/**
+	 * Function which allow to simulate the drawing action on the white board
+	 * @Return void
+	 */
+	public void drawNewForm(){
+		
+		//Create form to draw
+		motTest.creerForme();
+		p1 = motTest.getPoint1();
+		p2 = motTest.getPoint2();
+		typeForm = motTest.getChoixForme();
+		Logger.write(logFile,"Proc-" + procId+ " : Create form, wait critical section  befor drawing");
+		
+		// Try to access critical section
+		waitForCritical = true;
+		askForCritical();
+		
+		Logger.write(logFile,"Proc-" + procId + ":  Enter the Critical Section, draw form and publish");
+		lanceur.ajouteForme(p1, p2, typeForm);		
+		// Access critical
+		waitForCritical = false;
+		inCritical = true;
+		Color bg = Color.blue;
+		Color fg = Color.red;
+		
+		//Create message form and send it to the next processus
+		FormMessage form = new FormMessage(MsgType.FORME, procId,getNextProcId(), p1, p2, tailleForm, typeForm, bg, fg);
+		next = myRouter.getDoorOnMyRoute(getNextProcId());
+		boolean sent = sendTo(next, form);
+		
+		//Wait a bit befor releasing the critical section
+		try {
+			Thread.sleep(1000);
+		} 
+		catch (InterruptedException ie) {Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());}
+		
+		// Release critical use
+		Logger.write(logFile,"Proc-" + procId + ":  Release the Critical Section");
+		inCritical = false;
+		endCriticalUse();
+	}
+
+	/**
+	 * Rule 1 : ask for critical section
+	 * @return void 
+	 * 
+	 */
 	synchronized void askForCritical() {
 
+		//while the token is false, I stay awaiting a notify signal
 		while (!token) {
-	
-			motTest.creerForme();
-			p1 = motTest.getPoint1();
-			p2 = motTest.getPoint2();
-			typeForm = motTest.getChoixForme();
-			Logger.write(logFile,"Proc-" + procId
-					+ " : Create form, wait critical section  befor drawing");
+
 			try {
 				this.wait();
-			} catch (InterruptedException ie) {
-			}
+			} 
+			catch (InterruptedException ie) {}
 		}
 	}
-	// Rule 4 : receive TOKEN
+	
+	/**
+	 *  Rule 2 : receive TOKEN
+	 *  @return void
+	 * 
+	 */
 	public synchronized void receiveTOKEN(final TokenMessage tm) {
 
 		if (tm.idProc == procId) {
+			
+			//If the token is destinated to me
 			next = myRouter.getDoorOnMyRoute(getNextProcId());
+			
+			//if i'am waiting the critical section, my token become true and I notify the sleeping processus
 			if (waitForCritical) {
 
-				lanceur.ajouteForme(p1, p2, typeForm);
-				next = myRouter.getDoorOnMyRoute(getNextProcId());
+				Logger.write(logFile,"Proc-" + procId + ":  Receive token");
 				token = true;
-				Color bg = Color.blue;
-				Color fg = Color.red;
-				FormMessage form = new FormMessage(MsgType.FORME, procId,
-						getNextProcId(), p1, p2, tailleForm, typeForm, bg, fg);
-				boolean sent = sendTo(next, form);
-
-				Logger.write(logFile,"Proc-" + procId
-						+ " : Receive token, get in critical section, "
-						+ "drawing form and send my form to proc-"
-						+ getNextProcId() + " on door " + next);
 				notify();
 
-			} else {
+			}
+			else {
 
-				Logger.write(logFile,"proc-" + procId
-						+ " : Receive token, do not need it, I forward it to "
-						+ getNextProcId() + " on door " + next);
-
+				Logger.write(logFile,"proc-" + procId+ " : Receive token, do not need it, I forward it to "+ getNextProcId() + " on door " + next);
 				tm.idProc = getNextProcId();
 				boolean sent = sendTo(next, tm);
 			}
 
-		} else {
+		} 
+		else{
 
 			next = myRouter.getDoorOnMyRoute(tm.idProc);
-			Logger.write(logFile,"proc-" + procId
-					+ " : Receive token but do not need it, on door " + next);
+            Logger.write(logFile,"proc-" + procId+ " : Receive token but it is not mine");
 			boolean sent = sendTo(next, tm);
 		}
 	}
 
-	// Rule 5 : receive Form && I send the form if only the next proc is
-	// different of the owner of the form
+	/**
+	 *  Rule 5 : receive Form && I send the form if only the next proc is
+	 *  different of the owner of the form
+	 *  @return void
+	 * 
+	 * */
 	synchronized public void receiveFormMessage(final FormMessage form) {
 		// TODO Auto-generated method stub
-		Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
+		
 		if (form.nextProcId == procId) {
 
 			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			if (getNextProcId() > form.nextProcId
-					&& getNextProcId() != form.procId) {
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId+" draw on my white board");
+			if (getNextProcId() > form.nextProcId && getNextProcId() != form.procId) {
 				form.nextProcId = getNextProcId();
 				next = myRouter.getDoorOnMyRoute(form.nextProcId);
 				boolean sent = sendTo(next, form);
-			} else {
+				
+			} else{
 
 				if (getNextProcId() != form.procId) {
 
@@ -263,13 +287,18 @@ public class LelannMutualExclusion extends Algorithm {
 			}
 		} else {
 
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId+" let it pass");
 			next = myRouter.getDoorOnMyRoute(form.nextProcId);
 			boolean sent = sendTo(next, form);
 		}
 
 	}
 
-	// Rule 6 :
+	/**
+	 * Release critical section
+	 * @return void 
+	 * 
+	 */
 	void endCriticalUse() {
 
 		next = myRouter.getDoorOnMyRoute(getNextProcId());
@@ -277,11 +306,15 @@ public class LelannMutualExclusion extends Algorithm {
 		TokenMessage tm = new TokenMessage(MsgType.TOKEN, getNextProcId());
 		boolean sent = sendTo(next, tm);
 		Logger.write(logFile,"proc-" + procId
-				+ " : Leave Critical Section send token to " + getNextProcId()
+				+ " : Release Critical Section send token to " + getNextProcId()
 				+ " on door " + next);
 	}
 
-	// Determine the next proc id
+	/**
+	 * Using a ring protocol, in ascending direction, 
+	 * Use this function in order to get the next processus to communicate with
+	 * @return integer value
+	 */
 	public int getNextProcId() {
 
 		nextProcId = procId + 1;
@@ -292,7 +325,12 @@ public class LelannMutualExclusion extends Algorithm {
 		return nextProcId;
 	}
 
-	// Send message Where Is
+	/**
+	 *  Function for routing processus
+	 *  @return void
+	 *  @param final instance of ExtendRouteMessage
+	 *  @param final integer value of a door message listener
+	 */
 	public void sendRouteMessage(	final ExtendRouteMessage mr,
 									final int exceptDoor) {
 
@@ -306,35 +344,59 @@ public class LelannMutualExclusion extends Algorithm {
 		}
 	}
 
-	// Access to receive function
+	/**
+	 * This function allow us to access to protected 
+	 * receive function outside of the class
+	 * @return instance of Message
+	 * @param final integer value of a door message listener
+	 */ 
+	
 	public Message recoit(final Door d) {
 
 		Message m = receive(d);
 		return m;
 	}
 
-	// Access to receive function
+	
+	/**
+	 * This function allow us to receive a token message 
+	 * @return instance of TokenMessage
+	 * @param final integer value of a door message listener
+	 */ 
 	public TokenMessage recoitToken(final Door d) {
 
 		TokenMessage sm = (TokenMessage) receive(d);
 		return sm;
 	}
 
-	// Access to receive function
+	/**
+	 * This function allow us to receive a form message 
+	 * @return instance of FormMessage
+	 * @param final integer value of a door message listener
+	 */ 
 	public FormMessage recoitForme(final Door d) {
 
 		FormMessage sm = (FormMessage) receive(d);
 		return sm;
 	}
 
-	// Access to receive function
+	/**
+	 * This function allow us to receive a Route message 
+	 * @return instance of RouteMessage
+	 * @param final integer value of a door message listener
+	 */ 
 	public RouteMessage recoitRoute(final Door d) {
 
 		RouteMessage rm = (RouteMessage) receive(d);
 		return rm;
 	}
 
-	// Access to receive function
+	
+	/**
+	 * This function allow us to receive a ExtendRoute message 
+	 * @return void
+	 * @param final integer value of a door message listener
+	 */ 
 	public void recoitExtendRouteMessage(final Door d) {
 
 		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
@@ -371,11 +433,25 @@ public class LelannMutualExclusion extends Algorithm {
 		}
 	}
 	
+	/**
+	 * This function allow us to access to protected 
+	 * sendTo function outside of the class
+	 * @return boolean value
+	 * @param final integer value of a door message listener
+	 * @param instance of Message
+	 */
+	
 	public boolean envoiTo(int door, Message message){
 		
 		return sendTo(door,message);
 	}
 	
+	
+	/**
+	 * This function allow to write in the log the routing table of each processus
+	 * @return void
+	 * 
+	 */
 	
 	private void writeRoute(){
 		

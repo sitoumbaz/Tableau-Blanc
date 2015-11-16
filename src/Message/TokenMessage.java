@@ -4,7 +4,10 @@ import visidia.simulation.process.messages.Message;
 
 public class TokenMessage extends Message {
     
-    public MsgType type;
+	/** The type of the message, in this case the type is ROUTE */
+	public MsgType type;
+	
+	/** The proc-Id of the message creator */
     public int idProc;
     
     public TokenMessage(MsgType t, int proc) {

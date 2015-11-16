@@ -30,7 +30,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	public int procId;
 	public int next = 0;
 	public int owner = 0;
-	public int speed = 4;
+	public int speed = 2;
 	public int netSize = 0;
 	public int arity = 0;
 	public boolean token = false;
@@ -123,7 +123,11 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		
 	}
 	
-	
+	/**
+	 * Synchronized function which allow to set up 
+	 * the routing table of each processus
+	 * @return void
+	 */
 	public synchronized  void routing(){
 		
 		myRouter = new MyRouter(getNetSize());
@@ -147,21 +151,22 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		
 	}
 	
+	/**
+	 * Function which allow to simulate the drawing action on the white board
+	 * @Return void
+	 */
+	
 	public void drawNewForm(){
 		
 		motTest.creerForme();
 		p1 = motTest.getPoint1();
 		p2 = motTest.getPoint2();
 		typeForm = motTest.getChoixForme();
-		Logger.write(logFile,"Proc-" + procId
-				+ " : Create form, wait critical section  befor drawing");
+		Logger.write(logFile,"Proc-" + procId+ " : Create form, wait critical section  befor drawing");
 		askCriticalSection();
-		
-		Color bg = Color.blue;
-		Color fg = Color.red;
+		Logger.write(logFile,"Proc-" + procId + ":  Enter the Critical Section, draw form and publish");
 		lanceur.ajouteForme(p1, p2, typeForm);
 		sendForm();
-		Logger.write(logFile,"Proc-" + procId + ":  Critical Section, wait for " + 2500);
 		try {
 			Thread.sleep(2500);
 		} catch (InterruptedException ie) {
@@ -173,19 +178,21 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	
 	/********************************** Rules of the Algorithm of Naimi Treil ********************************/
 	
-	// Rules 1: Ask the critical section
-	
+	/**
+	 * Rule 1 : ask for critical section
+	 * @return void 
+	 * 
+	 */
 	public synchronized void askCriticalSection(){
 		
 		SCI = true;
-		Logger.write(logFile,"Proc-"+procId+" : Need critical section ");
 		if(owner != -2){
 			
 			RulesMessage m = new RulesMessage(MsgType.REQ,this.procId, owner,0);
 			int door = myRouter.getDoorOnMyRoute(owner);
 			boolean sent = sendTo(door,m);
-			owner = -2;
 			Logger.write(logFile,"Proc-"+procId+" : Send REQ to owner Proc-"+owner);
+			owner = -2;
 			while(!token){
 				
 				try {
@@ -196,7 +203,12 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		}
 	}
 	
-	// Rules 2 : Receive REQ Message
+	/**
+	 * Rule 2 : receiv req send
+	 * @return void 
+	 * @param instance of RulesMessage class
+	 * 
+	 */
 	public synchronized void receiveReq(RulesMessage m){
 		
 		
@@ -212,20 +224,23 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 				}
 				else{
 					
-					token = false;
+					
 					RulesMessage m_jeton = new RulesMessage(MsgType.TOKEN, procId, m.procId,0);
 					door = myRouter.getDoorOnMyRoute(m.procId);
 					boolean send = sendTo(door,m_jeton);
 					Logger.write(logFile,"Proc-"+procId+" : Send TOKEN to Proc-"+m.procId);
+					token = false;
+					owner = m.procId;
 				}
 			}
 			else{
 				
 				Logger.write(logFile,"Proc-"+procId+" : I am not the owner, I send REQ to owner Proc-"+owner);
 				door = myRouter.getDoorOnMyRoute(owner);
+				m.procRecipient = owner;
 				boolean send = sendTo(door,m);
 			}
-			owner = m.procId;
+			
 		}
 		
 		else{
@@ -233,12 +248,15 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 			boolean send = sendTo(door,m);
 		}
 		
-		
-		
 	}
 	
 	
-	// Rules 3 : Receive JETON (TOKEN) Message
+	/**
+	 * Rule 3 : receiv JETON.
+	 * @return void 
+	 * @param instance of RulesMessage class
+	 * 
+	 */
 	public synchronized void receiveJeton(RulesMessage m){
 		
 		int door = myRouter.getDoorOnMyRoute(m.procRecipient);
@@ -254,6 +272,30 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		}
 	}
 	
+	/**
+	 *  Rule 4 : receive Form && I send the form if only the next proc is
+	 *  different of the owner of the form
+	 *  @return void
+	 * 
+	 * */
+	synchronized public void receiveFormMessage(final FormMessage form) {
+		// TODO Auto-generated method stub
+		Logger.write(logFile,"Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
+		if (form.nextProcId == procId) {
+			
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
+			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
+			
+		} 
+		else {
+
+			int door = myRouter.getDoorOnMyRoute(form.nextProcId);
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
+			sendTo(door, form);
+		}
+
+	}
+	
 	//Rules 4 : Release Critical Section
 	public void endCriticalSection(){
 		
@@ -266,6 +308,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 			RulesMessage m_jeton = new RulesMessage(MsgType.TOKEN, procId, next,0);
 			boolean send = sendTo(door,m_jeton);
 			Logger.write(logFile,"Proc-"+procId+" : Release Critical Section and Send TOKEN to Proc-"+next);
+			owner = next;
 			next = -2;
 		}
 		
@@ -273,7 +316,11 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	/********************************* End Rules of the Algorithm of Naimi Treil *****************************/
 	
 	
-	// Access to receive function
+	/**
+	 * This function allow us to receive a ExtendRoute message 
+	 * @return void
+	 * @param final integer value of a door message listener
+	 */
 	public void recoitExtendRouteMessage(final Door d) {
 
 		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
@@ -310,7 +357,11 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		}
 	}
 	
-	// Access to receive function of route Message
+	/**
+	 * This function allow us to receive a Route message 
+	 * @return instance of RouteMessage
+	 * @param final integer value of a door message listener
+	 */ 
 	public RouteMessage recoitRoute(final Door d) {
 
 		RouteMessage rm = (RouteMessage) receive(d);
@@ -332,25 +383,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		
 	/********************************** End of Rules of setting the route *******************************************/
 	
-	//receive Form && I send the form if only the next proc is
-	// different of the owner of the form
-	synchronized public void receiveFormMessage(final FormMessage form) {
-		// TODO Auto-generated method stub
-		Logger.write(logFile,"Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
-		if (form.nextProcId == procId) {
-			
-			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
-			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			
-		} 
-		else {
-
-			int door = myRouter.getDoorOnMyRoute(form.nextProcId);
-			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
-			sendTo(door, form);
-		}
-
-	}
+	
 		
 	// Access to receive function
 	public Message recoit(final Door d) {
@@ -377,11 +410,24 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 		
 	}
 	
+	/**
+	 * This function allow us to access to protected 
+	 * sendTo function outside of the class
+	 * @return boolean value
+	 * @param final integer value of a door message listener
+	 * @param instance of Message
+	 */
+	
 	public boolean envoiTo(int door, Message message){
 		
 		return sendTo(door,message);
 	}
 	
+	/**
+	 * This function allow to write in the log the routing table of each processus
+	 * @return void
+	 * 
+	 */
 	private void writeRoute(){
 		
 		String str = "#### Route of Proc-" + procId + " ######\n";

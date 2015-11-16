@@ -35,7 +35,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	public int arity = 0;
 	public int netSize = 0;
 	//
-	public int speed = 4;
+	public int speed = 2;
 
 	// just for managin displaying routing table in the log
 	public boolean iAmReady = false;
@@ -51,6 +51,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	// <procId,procDoor>
 	private HashMap<Integer, Integer> X = new HashMap<Integer, Integer>();
 	private int Nrel = 0; // Nombre des REL attendu
+	boolean boolNrel = false;
 	private int V = 0; // Nombre des voisins du processus
 
 	public int procId = 0; // My processus Id
@@ -94,58 +95,38 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		routing();
 		/* End setting up route */
 		
-		
-		Logger.write(logFile,"Proc-"+procId+" I am ready to begin "+ myRouter.ready);
 		lanceur = new Lanceur("Tableau Blanc Proc" + getId());
+		lanceur.start();
 		Logger.write(logFile,"Proc-"+procId+" I launch the white board named Tableau Blanc Proc"+procId);
 		motTest = new MoteurTest();
-		lanceur.start();
-		
 		
 		messageListener = new MessageListener(this);
 		messageListener.start();
 		Logger.write(logFile,"Proc-" + procId + " I start my message Listerner");
-		if (procId == 0) {
-	
-			Logger.write(logFile,"Proc-" + procId + ": Try to access critical section");
-			// Try to access critical section
-			R = true;
-			this.askCriticalSection();
-
-			// Release critical use
-			R = false;
-			this.endCriticalSection();
-
-		}
 		
 		while (true) {
 
 			// Wait for some time
-			time = (4 + rand.nextInt(10)) * 1000;
+			time = (4 + rand.nextInt(10));
 			Logger.write(logFile,"Proc-" + procId + ":  wait for " + time);
 			try {
-				Logger.write(logFile,"Proc-" + procId + ": time "+time);
 				Thread.sleep(time);
 			} catch (InterruptedException ie) {
 				Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
 			}
-			
-			Logger.write(logFile,"Proc-" + procId + ": Try to access critical section");
-			// Try to access critical section
-			R = true;
-			this.askCriticalSection();
-			
-			// Release critical use
-			R = false;
-			this.endCriticalSection();	
+			drawNewForm();
 		
 
 		}
 	}
-	// --------------------
-	// Rules
-	// -------------------
 	
+	/**
+	 * Synchronized function which allow to set up 
+	 * the routing table of each process
+	 * 
+	 * @return void
+	 * 
+	 */
 	
 	public synchronized  void routing(){
 		
@@ -163,7 +144,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		
 		writeRoute();
 		try {
-			routing.sleep(1000);
+			Thread.sleep(1000);
 			routing.interrupt();
 		
 		} catch (InterruptedException e) {e.printStackTrace();}
@@ -171,16 +152,204 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		
 	}
 
+	/**
+	 * Function which allow to simulate the drawing action on the white board
+	 * @Return void
+	 * 
+	 */
+	
+	public void drawNewForm(){
+		
+		motTest.creerForme();
+		p1 = motTest.getPoint1();
+		p2 = motTest.getPoint2();
+		typeForm = motTest.getChoixForme();
+		Logger.write(logFile,"Proc-" + procId+ " : Create form, wait critical section  befor drawing");
+		askCriticalSection();
+		Logger.write(logFile,"Proc-" + procId + ":  Enter the Critical Section, draw form and publish");
+		lanceur.ajouteForme(p1, p2, typeForm);
+		sendForm();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException ie) {
+			Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
+		}
+		endCriticalSection();
+		
+	}
 	
 
-	// Access to receive function
+	/**************************************** Rules of Ricart Agrawalla Algorithme **************************/
+	
+	/**
+	 * Rule 1 : ask for critical section
+	 * @return void 
+	 * 
+	 */
+	public synchronized  void askCriticalSection(){
+		
+		R = true;
+		HSC = H + 1;
+		Nrel = getNetSize()-1;
+		
+		for(int i=0; i<getNetSize(); i++){
+			if(i != procId){
+				
+				int door = myRouter.getDoorOnMyRoute(i);
+				RulesMessage ms = new RulesMessage(MsgType.REQ, procId,i,HSC);
+				boolean send = sendTo(door, ms);
+				Logger.write(logFile,"Proc-" + procId + ": Send REQ to "+ms.procRecipient+" on door "+door);
+			}
+		}
+			
+		while(!boolNrel){
+			
+			try {
+				this.wait();
+			} catch (InterruptedException e) {e.printStackTrace();}
+		}
+		
+		System.out.println("procId-"+procId+" BYE BYE GET NOTIFY NREL = "+Nrel);
+		
+	}
+	
+	/**
+	 * Rule 2 : receiv req send
+	 * @return void 
+	 * @param instance of RulesMessage class
+	 * 
+	 */
+	public synchronized void receiveReq(RulesMessage ms){
+		
+		int door = myRouter.getDoorOnMyRoute(ms.procRecipient);
+		if(ms.procRecipient == procId){
+			
+			
+			door = myRouter.getDoorOnMyRoute(ms.procId);
+			H = Math.max(H, ms.H) + 1;
+			Logger.write(logFile,"Proc-"+procId+" Receive REQ of proc-"+ms.procId+" on door "+door+"");
+			if(R && ((HSC < ms.H) || ((HSC == ms.H) && procId < ms.procId))){
+				
+				Logger.write(logFile,"Proc-"+procId+" Adding proc-"+ms.procId+" in my queue list");
+				X.put(ms.procId,door);
+			}
+			else{
+				
+				Logger.write(logFile,"Proc-"+procId+" I can immediatly send the REL to proc-"+ms.procId+"");
+				RulesMessage mrel = new RulesMessage(MsgType.REL, procId,ms.procId,0);
+				door = myRouter.getDoorOnMyRoute(ms.procId);
+				this.sendTo(door, mrel);
+			}
+			
+		}
+		else{
+			
+			this.sendTo(door, ms);
+		}
+		
+	}
+
+	/**
+	 * Rule 3 : receiv REL.
+	 * @return void 
+	 * @param instance of RulesMessage class
+	 * 
+	 */
+	public synchronized void receiveRel(final RulesMessage rm) {
+		
+		
+		if (rm.procRecipient == procId) {
+		
+			Nrel--;
+			System.out.println("procId-"+procId+" NREL = "+Nrel);
+			if(Nrel > 0){
+				System.out.println("procId-"+procId+" BYE BYE NREL = "+Nrel);
+				return;	
+			}
+
+			System.out.println("procId-"+procId+" NOTIFY NREL = "+Nrel);
+			boolNrel = true;
+			this.notifyAll();
+		} 
+		else {
+			
+			next = this.myRouter.getDoorOnMyRoute(rm.procRecipient);
+			Logger.write(logFile,"proc-" + procId+":Receive REL, do not need it, I forward it to "+ rm.procRecipient + " on door " + next);
+			boolean sent = this.sendTo(next, rm);
+		}
+	}
+
+	/**
+	 * Rule 4 : release critical section.
+	 * @return void 
+	 * 
+	 */
+	void endCriticalSection() {
+		
+		Logger.write(logFile,"Proc-"+procId+" : Release Critical Section");
+		if(X.size() == 0){
+			
+			Logger.write(logFile,"Proc-"+procId+" No message received for asking critical section");
+			return;
+		}
+		
+		for (int i = 0; i < getNetSize(); i++) {
+			
+			
+			if(X.containsKey(i)){
+				RulesMessage mrel = new RulesMessage(MsgType.REL, procId,i,0);
+				int door = this.myRouter.getDoorOnMyRoute(i);
+				sendTo(door, mrel);
+				Logger.write(logFile,"Proc-"+procId+" Send REL to "+mrel.procRecipient+" on door "+door);
+				X.remove(i);
+			}
+		}
+		
+	}
+	
+	/**
+	 *  Rule 5 : receive Form && I send the form if only the next process is
+	 *  different of the owner of the form
+	 *  @return void
+	 *  @param final instace of FormMessage class
+	 * 
+	 * */
+	
+	public synchronized void receiveFormMessage(final FormMessage form) {
+		// TODO Auto-generated method stub
+		if (form.nextProcId == procId) {
+			
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
+			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
+			
+		} else {
+
+			next = myRouter.getDoorOnMyRoute(form.nextProcId);
+			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
+			sendTo(next, form);
+			
+		}
+
+	}
+	
+	/*********************************** end of rules of Ricart Agrawalla Algorithme ***********************/
+	
+	/**
+	 * This function allow us to receive a Route message 
+	 * @return instance of RouteMessage
+	 * @param final integer value of a door message listener
+	 */ 
 	public RouteMessage recoitRoute(final Door d) {
 
 		RouteMessage rm = (RouteMessage) receive(d);
 		return rm;
 	}
 
-	// Access to receive function
+	/**
+	 * This function allow us to receive a ExtendRoute message 
+	 * @return void
+	 * @param final integer value of a door message listener
+	 */ 
 	public void recoitExtendRouteMessage(final Door d) {
 
 		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
@@ -217,7 +386,12 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		}
 	}
 
-	// Send message Where Is
+	/**
+	 *  Function for routing process
+	 *  @return void
+	 *  @param final instance of ExtendRouteMessage
+	 *  @param final integer value of a door message listener
+	 */
 	public void sendRouteMessage(	final ExtendRouteMessage mr,final int exceptDoor) {
 
 		for (int i = 0; i < getArity(); i++) {
@@ -229,153 +403,56 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 
 		}
 	}
-
-	/* Rule 1 : processus ask for critical section */
-	public synchronized  void askCriticalSection(){
-		
-		HSC = H + 1;
-		Nrel = getNetSize()-1;
-		Logger.write(logFile,"Proc-"+procId+" Je suis ici  getNetSize() = "+getNetSize());
-		for(int i=0; i<getNetSize(); i++){
-			
-			if(i != procId){
-				
-				int door = myRouter.getDoorOnMyRoute(i);
-				RulesMessage ms = new RulesMessage(MsgType.REQ, procId,i,HSC);
-				boolean send = sendTo(door, ms);
-				Logger.write(logFile,"Proc-" + procId + ": Send REQ to "+ms.procRecipient+" on door "+door);
-			}
-		}
-		
-		motTest.creerForme();
-		p1 = motTest.getPoint1();
-		p2 = motTest.getPoint2();
-		typeForm = motTest.getChoixForme();
-		Logger.write(logFile,"Proc-"+procId+" : Create form, wait critical section  befor drawing");
-		
-		while(Nrel != 0){
-			try {
-				this.wait();
-			} catch (InterruptedException e) {e.printStackTrace();}
-		}
-		
-	}
 	
-	/* Rules 2 : */
-	public synchronized void receiveReq(RulesMessage ms){
-		
-		int door = myRouter.getDoorOnMyRoute(ms.procRecipient);
-		if(ms.procRecipient == procId){
-			
-			
-			door = myRouter.getDoorOnMyRoute(ms.procId);
-			H = Math.max(H, ms.H) + 1;
-			Logger.write(logFile,"Proc-"+procId+" Receive REQ of proc-"+ms.procId+" on door "+door+"");
-			if(R && ((HSC < ms.H) || ((HSC == ms.H) && procId < ms.procId))){
-				
-				Logger.write(logFile,"Proc-"+procId+" Adding proc-"+ms.procId+" in my queue list");
-				X.put(ms.procId,door);
-			}
-			else{
-				
-				Logger.write(logFile,"Proc-"+procId+" I can immediatly send the REL to proc-"+ms.procId+"");
-				RulesMessage mrel = new RulesMessage(MsgType.REL, procId,ms.procId,0);
-				this.sendTo(door, mrel);
-			}
-			
-		}
-		else{
-			
-			this.sendTo(door, ms);
-		}
-		
-	}
-
-	/* Rule 3 : */
-	/* le processus reçoit le message rel() de j */
-	public synchronized void receiveRel(final RulesMessage rm) {
-
-		if (rm.procRecipient == procId) {
-			Nrel--;
-			if(Nrel == 0){
-				
-				Color bg = Color.blue;
-				Color fg = Color.red;
-				lanceur.ajouteForme(p1, p2, typeForm);
-				for(int i=0; i<getNetSize(); i++){
-					
-					if(i != procId){
-						
-						FormMessage form = new FormMessage(MsgType.FORME, procId,i, p1, p2, tailleForm, typeForm, bg, fg);
-						int door = myRouter.getDoorOnMyRoute(i);
-						boolean send = this.sendTo(door, form);	
-					}
-				}
-				notify();
-			}
-		} else {
-			
-			next = this.myRouter.getDoorOnMyRoute(rm.procRecipient);
-			Logger.write(logFile,"proc-" + procId
-					+ " : Receive REL, do not need it, I forward it to "
-					+ rm.procRecipient + " on door " + next);
-			boolean sent = this.sendTo(next, rm);
-		}
-	}
-
-	/* Rule 4 */
-	void endCriticalSection() {
-
-		
-		Logger.write(logFile,"Proc-"+procId+" End critical section");
-		if(X.size() == 0){
-			
-			Logger.write(logFile,"Proc-"+procId+" No message received for asking critical section");
-			return;
-		}
-		
-		for (int i = 0; i < getNetSize(); i++) {
-			
-			
-			if(X.containsKey(i)){
-				RulesMessage mrel = new RulesMessage(MsgType.REL, procId,i,0);
-				int door = this.myRouter.getDoorOnMyRoute(i);
-				sendTo(door, mrel);
-				Logger.write(logFile,"Proc-"+procId+" Send REL to "+mrel.procRecipient+" on door "+door);
-				X.remove(i);
-			}
-		}
-		
-	}
-	
-	public synchronized void receiveFormMessage(final FormMessage form) {
-		// TODO Auto-generated method stub
-		Logger.write(logFile,"Proc-"+this.procId+" Recoit form destine a "+form.nextProcId);
-		if (form.nextProcId == procId) {
-			
-			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId);
-			lanceur.ajouteForme(form.point1, form.point2, form.typeForm);
-			
-		} else {
-
-			next = myRouter.getDoorOnMyRoute(form.nextProcId);
-			Logger.write(logFile,"Proc-" + procId + ": Receive form of " + form.procId+" send it to the recipient Proc-"+form.nextProcId+" on door "+next);
-			sendTo(next, form);
-		}
-
-	}
-	// Access to receive function
+	/**
+	 * This function allow us to access to protected 
+	 * receive function outside of the class
+	 * @return instance of Message
+	 * @param final integer value of a door message listener
+	 */ 
 	public synchronized Message recoit(final Door d) {
 
 		Message m = receive(d);
 		return m;
 	}
 	
+	/**
+	 * This function allow us to access to protected 
+	 * sendTo function outside of the class
+	 * @return boolean value
+	 * @param final integer value of a door message listener
+	 * @param instance of Message
+	 */
 	public boolean envoiTo(int door, Message message){
 		
 		return sendTo(door,message);
 	}
 	
+	/**
+	 *  Function which allow us to send form to all process except the initiator
+	 *  @return void
+	 */ 
+	public void sendForm(){
+		
+		Color bg = Color.blue;
+		Color fg = Color.red;
+		for(int i=0; i<getNetSize(); i++){
+			
+			if(i != procId){
+				
+				FormMessage form = new FormMessage(MsgType.FORME, procId,i, p1, p2, tailleForm, typeForm, bg, fg);
+				int door = myRouter.getDoorOnMyRoute(i);
+				boolean send = this.sendTo(door, form);	
+			}
+		}
+		
+	}
+	
+	/**
+	 * This function allow to write in the log the routing table of each processus
+	 * @return void
+	 * 
+	 */
 	private void writeRoute(){
 		
 		String str = "#### Route of Proc-" + procId + " ######\n";

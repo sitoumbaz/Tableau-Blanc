@@ -7,14 +7,31 @@ import visidia.simulation.process.messages.Message;
 
 public class FormMessage extends Message {
     
-    public MsgType type;
+    /** The type of the message, in this case the type is FORME */
+	public MsgType type;
+	
+	/** The proc-Id of the process who create the form */
     public int procId;
+    
+    /** The proc-Id to whom the form is intended */
     public int nextProcId;
+    
+    /** The first point of the form  */
     public Point point1;
+    
+    /** The the second point of the form  */
     public Point point2;
+    
+    /** The the size of the form  */
     public float tailleForm;
+    
+    /** Background color of the form  */
     public Color bg;
+    
+    /** Foreground color of the form  */
     public Color fg;
+    
+    /** The the kind of the form to be drawn circle, rectangle, square, dot or line  */
     public int typeForm;
     
     

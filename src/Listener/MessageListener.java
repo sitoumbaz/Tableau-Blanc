@@ -14,11 +14,18 @@ import visidia.simulation.process.messages.Message;
 // Reception thread
 public class MessageListener extends Thread {
 
+	/** Init Instances of principal Algorithme used in the project*/
 	Algorithm algo;
 	LelannMutualExclusion algo1;
 	RicartAggrawalaMutualExclusion algo2;
 	NaimiTreilMutualExclusion algo3;
 	
+	/**
+	 * Constructor
+	 * @return void 
+	 * @param instance of Algorithm class
+	 * 
+	 */
 	public MessageListener(final Algorithm a) {
 		
 		algo = a;
@@ -68,15 +75,23 @@ public class MessageListener extends Thread {
 		}
 	}
 	
-
+	
+	
+	/**
+	 * Function which allow managing Message Rules of the Naimi-Treil Algorithm
+	 * @return void 
+	 * @param instance of NaimiTreilMutualExclusion class
+	 * @param instance of Door class
+	 * 
+	 */
 	private void listenerNaimiTreilMessage(NaimiTreilMutualExclusion algo3, Door d){
 		
+		/* Receive message and test if it is instance of RulesMessage class */
 		Message m_rec = algo3.recoit(d);
 		if(m_rec instanceof RulesMessage){
 		
 			
 			RulesMessage m = (RulesMessage)m_rec;
-			System.out.println("Proc-"+algo3.procId+" Listener receive message "+m.toString()+" on door "+d.getNum());
 			switch (m.getMsgType()) {
 				
 				case REQ :
@@ -113,6 +128,13 @@ public class MessageListener extends Thread {
 	}
 	
 	
+	/**
+	 * Function which allow managing Message Rules of the Ricart Agrwala Algorithm
+	 * @return void 
+	 * @param instance of RicartAggrawalaMutualExclusion class
+	 * @param instance of Door class
+	 * 
+	 */
 	private void listenRicartAggrawalaMessage(RicartAggrawalaMutualExclusion algo2, Door d){
 		
 		Message m_rec = algo2.recoit(d);
@@ -120,7 +142,6 @@ public class MessageListener extends Thread {
 		
 			
 			RulesMessage m = (RulesMessage)m_rec;
-			System.out.println("Proc-"+algo2.procId+" Listener receive message "+m.toString()+" on door "+d.getNum());
 			switch (m.getMsgType()) {
 				
 				case REQ :
@@ -156,7 +177,13 @@ public class MessageListener extends Thread {
 		}
 	}
 	
-	
+	/**
+	 * Function which allow managing Message Rules of the Lelan Algorithm
+	 * @return void 
+	 * @param instance of LelannMutualExclusion class
+	 * @param instance of Door class
+	 * 
+	 */
 	private void listenLelanMessage(LelannMutualExclusion algo1, Door d){
 		
 		Message m_rec = algo1.recoit(d);
@@ -204,7 +231,16 @@ public class MessageListener extends Thread {
 		}
 	}
 	
-
+	/**
+	 * Function which allow managing receiving form for each instance of
+	 * LelannMutualExclusion,RicartAggrawalaMutualExclusion and  
+	 * NaimiTreilMutualExclusion classes
+	 * @return void 
+	 * @param instance of Algorithm class
+	 * @param instance of Message class
+	 * @param instance of Door class
+	 * 
+	 */
 	private void receiveFormeMessage(Algorithm algo, Message m_, int door){
 		
 		FormMessage m = (FormMessage)m_;

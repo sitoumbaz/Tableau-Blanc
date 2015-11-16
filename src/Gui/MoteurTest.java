@@ -13,14 +13,6 @@ public class MoteurTest {
 	
 	public MoteurTest(){}
 
-	// On créer une forme de manière aléatoire
-	// On commence par séléctionner la forme point, rectangle, elipse, ligne (
-	// entre 0 et 3 )
-	// ensuite on choisit le premier point a minimum 50 px de la bordure ( pour
-	// eviter que la forme ne dépasse le cadre
-	// pour finir on choisit le deuxieme point dans un rayon de 50 px du premier
-	// pour eviter d'avoir de trop grosses formes qui prennent tout le tableau
-
 	public void creerForme() {
 		java.util.Random rand = new java.util.Random();
 

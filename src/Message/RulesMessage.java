@@ -4,13 +4,18 @@ import visidia.simulation.process.messages.Message;
 
 public class RulesMessage extends Message {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+	
+	/** The type of the message, in this case the type is REQ, REL or TOKEN */
 	MsgType type;
+	
+	/** The proc-Id of the message creator */
 	public int procId;
+	
+	/** The proc-Id to whom the form is intended */
 	public int procRecipient;
+	
+	/** The Lamport clock */
 	public int H;
 
 	public RulesMessage(	final MsgType t,
