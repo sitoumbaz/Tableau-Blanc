@@ -1,5 +1,8 @@
 package Listener;
 
+import visidia.simulation.process.algorithm.Algorithm;
+import visidia.simulation.process.messages.Door;
+import visidia.simulation.process.messages.Message;
 import Lelann.LelannMutualExclusion;
 import Message.ExtendRouteMessage;
 import Message.FormMessage;
@@ -7,43 +10,42 @@ import Message.RulesMessage;
 import Message.TokenMessage;
 import Naimi.NaimiTreilMutualExclusion;
 import RicartAggrawala.RicartAggrawalaMutualExclusion;
-import visidia.simulation.process.algorithm.Algorithm;
-import visidia.simulation.process.messages.Door;
-import visidia.simulation.process.messages.Message;
 
 // Reception thread
 public class MessageListener extends Thread {
 
-	/** Init Instances of principal Algorithme used in the project*/
+	/** Init Instances of principal Algorithme used in the project */
 	Algorithm algo;
+	// instantiation suivant le type d'algo.
 	LelannMutualExclusion algo1;
 	RicartAggrawalaMutualExclusion algo2;
 	NaimiTreilMutualExclusion algo3;
-	
+
 	/**
 	 * Constructor
-	 * @return void 
-	 * @param instance of Algorithm class
+	 * 
+	 * @return void
+	 * @param instance
+	 *            of Algorithm class
 	 * 
 	 */
 	public MessageListener(final Algorithm a) {
-		
+
 		algo = a;
-		if(a instanceof LelannMutualExclusion){
-			
-			algo1 = (LelannMutualExclusion)a;
+		if (a instanceof LelannMutualExclusion) {
+
+			algo1 = (LelannMutualExclusion) a;
 		}
-		
-		if(a instanceof RicartAggrawalaMutualExclusion){
-					
-			algo2 = (RicartAggrawalaMutualExclusion)a;
+
+		if (a instanceof RicartAggrawalaMutualExclusion) {
+
+			algo2 = (RicartAggrawalaMutualExclusion) a;
 		}
-		
-		if(a instanceof NaimiTreilMutualExclusion){
-			
-			algo3 = (NaimiTreilMutualExclusion)a;
+
+		if (a instanceof NaimiTreilMutualExclusion) {
+
+			algo3 = (NaimiTreilMutualExclusion) a;
 		}
-		
 
 	}
 
@@ -53,238 +55,245 @@ public class MessageListener extends Thread {
 		Door d = new Door();
 
 		while (true) {
-			
-			if(algo1 instanceof LelannMutualExclusion){
-				
-				
+
+			if (algo1 instanceof LelannMutualExclusion) {
+
 				listenLelanMessage(algo1, d);
 			}
-			
-			else if(algo2 instanceof RicartAggrawalaMutualExclusion){
-				
-				
+
+			else if (algo2 instanceof RicartAggrawalaMutualExclusion) {
+
 				listenRicartAggrawalaMessage(algo2, d);
 			}
-			
-			else if(algo3 instanceof NaimiTreilMutualExclusion){
-				
-				
+
+			else if (algo3 instanceof NaimiTreilMutualExclusion) {
+
 				listenerNaimiTreilMessage(algo3, d);
 			}
-			
+
 		}
 	}
-	
-	
-	
+
 	/**
 	 * Function which allow managing Message Rules of the Naimi-Treil Algorithm
-	 * @return void 
-	 * @param instance of NaimiTreilMutualExclusion class
-	 * @param instance of Door class
+	 * 
+	 * @return void
+	 * @param instance
+	 *            of NaimiTreilMutualExclusion class
+	 * @param instance
+	 *            of Door class
 	 * 
 	 */
-	private void listenerNaimiTreilMessage(NaimiTreilMutualExclusion algo3, Door d){
-		
+	private void listenerNaimiTreilMessage(	final NaimiTreilMutualExclusion algo3,
+											final Door d) {
+
 		/* Receive message and test if it is instance of RulesMessage class */
 		Message m_rec = algo3.recoit(d);
-		if(m_rec instanceof RulesMessage){
-		
-			
-			RulesMessage m = (RulesMessage)m_rec;
-			switch (m.getMsgType()) {
-				
-				case REQ :
-					
-					algo3.receiveReq(m);
-					
-				break;
-				
-				case TOKEN :
-					
-					algo3.receiveJeton(m);
-					
-				break;
-	
-				default :
-					System.out.println("Error message type");
-			}
-		}
-		else if(m_rec instanceof FormMessage){
-			
-			receiveFormeMessage(algo, m_rec,d.getNum());
-			
-		}else{
-			
-			if(m_rec instanceof ExtendRouteMessage ){
-				
-					System.out.println("Receive message ExtendRouteMessage");
-					
-			}else{
-				
-				System.out.println("Error message");
-			}
-		}
-	}
-	
-	
-	/**
-	 * Function which allow managing Message Rules of the Ricart Agrwala Algorithm
-	 * @return void 
-	 * @param instance of RicartAggrawalaMutualExclusion class
-	 * @param instance of Door class
-	 * 
-	 */
-	private void listenRicartAggrawalaMessage(RicartAggrawalaMutualExclusion algo2, Door d){
-		
-		Message m_rec = algo2.recoit(d);
-		if(m_rec instanceof RulesMessage){
-		
-			
-			RulesMessage m = (RulesMessage)m_rec;
-			switch (m.getMsgType()) {
-				
-				case REQ :
-					
-					algo2.receiveReq(m);
-					
-				break;
-				
-				case REL :
-					
-					algo2.receiveRel(m);
-					
-				break;
-	
-				default :
-					System.out.println("Error message type");
-			}
-		}
-		else if(m_rec instanceof FormMessage){
-			
-			receiveFormeMessage(algo, m_rec,d.getNum());
-			
-		}else{
-			
-			if(m_rec instanceof ExtendRouteMessage ){
-				
-					System.out.println("Receive message ExtendRouteMessage");
-					
-			}else{
-				
-				System.out.println("Error message");
-			}
-		}
-	}
-	
-	/**
-	 * Function which allow managing Message Rules of the Lelan Algorithm
-	 * @return void 
-	 * @param instance of LelannMutualExclusion class
-	 * @param instance of Door class
-	 * 
-	 */
-	private void listenLelanMessage(LelannMutualExclusion algo1, Door d){
-		
-		Message m_rec = algo1.recoit(d);
-		if(m_rec instanceof TokenMessage){
-			
-			System.out.println(" Message type Proc id "+algo1.procId);
-			TokenMessage m = null;
-			try{
-				m =  (TokenMessage)m_rec;
-				
-			}catch(Exception e){
-				
-				System.out.println(" Mince "+e.getMessage());
-			}
-			
-			System.out.println(" Message type "+m.type);
+		if (m_rec instanceof RulesMessage) {
+
+			RulesMessage m = (RulesMessage) m_rec;
 			switch (m.getMsgType()) {
 
+				case REQ :
+
+					algo3.receiveReq(m);
+
+					break;
+
 				case TOKEN :
-					
-					System.out.println("Call send "+algo1.procId);
-					algo1.receiveTOKEN(m);
-					
+
+					algo3.receiveJeton(m);
+
 					break;
 
 				default :
 					System.out.println("Error message type");
 			}
-			
-		}
-		else if(m_rec instanceof FormMessage){
-			
-			receiveFormeMessage(algo, m_rec,d.getNum());
-			
-		}else{
-			
-			if(m_rec instanceof ExtendRouteMessage ){
-				
-					System.out.println("Receive message ExtendRouteMessage");
-					
-			}else{
-				
+		} else if (m_rec instanceof FormMessage) {
+
+			receiveFormeMessage(algo, m_rec, d.getNum());
+
+		} else {
+
+			if (m_rec instanceof ExtendRouteMessage) {
+
+				System.out.println("Receive message ExtendRouteMessage");
+
+			} else {
+
 				System.out.println("Error message");
 			}
 		}
 	}
-	
+
 	/**
-	 * Function which allow managing receiving form for each instance of
-	 * LelannMutualExclusion,RicartAggrawalaMutualExclusion and  
-	 * NaimiTreilMutualExclusion classes
-	 * @return void 
-	 * @param instance of Algorithm class
-	 * @param instance of Message class
-	 * @param instance of Door class
+	 * Function which allow managing Message Rules of the Ricart Agrwala
+	 * Algorithm
+	 * 
+	 * @return void
+	 * @param instance
+	 *            of RicartAggrawalaMutualExclusion class
+	 * @param instance
+	 *            of Door class
 	 * 
 	 */
-	private void receiveFormeMessage(Algorithm algo, Message m_, int door){
-		
-		FormMessage m = (FormMessage)m_;
-		if(algo instanceof LelannMutualExclusion){
-			
-			LelannMutualExclusion lelan = (LelannMutualExclusion)algo;
+	private void listenRicartAggrawalaMessage(	final RicartAggrawalaMutualExclusion algo2,
+												final Door d) {
+
+		Message m_rec = algo2.recoit(d);
+		if (m_rec instanceof RulesMessage) {
+
+			RulesMessage m = (RulesMessage) m_rec;
+			switch (m.getMsgType()) {
+
+				case REQ :
+
+					algo2.receiveReq(m);
+
+					break;
+
+				case REL :
+
+					algo2.receiveRel(m);
+
+					break;
+
+				default :
+					System.out.println("Error message type");
+			}
+		} else if (m_rec instanceof FormMessage) {
+
+			receiveFormeMessage(algo, m_rec, d.getNum());
+
+		} else {
+
+			if (m_rec instanceof ExtendRouteMessage) {
+
+				System.out.println("Receive message ExtendRouteMessage");
+
+			} else {
+
+				System.out.println("Error message");
+			}
+		}
+	}
+
+	/**
+	 * Function which allow managing Message Rules of the Lelan Algorithm
+	 * 
+	 * @return void
+	 * @param instance
+	 *            of LelannMutualExclusion class
+	 * @param instance
+	 *            of Door class
+	 * 
+	 */
+	private void listenLelanMessage(final LelannMutualExclusion algo1,
+									final Door d) {
+
+		Message m_rec = algo1.recoit(d);
+		if (m_rec instanceof TokenMessage) {
+
+			System.out.println(" Message type Proc id " + algo1.procId);
+			TokenMessage m = null;
+			try {
+				m = (TokenMessage) m_rec;
+
+			} catch (Exception e) {
+
+				System.out.println(" Mince " + e.getMessage());
+			}
+
+			System.out.println(" Message type " + m.type);
+			switch (m.getMsgType()) {
+
+				case TOKEN :
+
+					System.out.println("Call send " + algo1.procId);
+					algo1.receiveTOKEN(m);
+
+					break;
+
+				default :
+					System.out.println("Error message type");
+			}
+
+		} else if (m_rec instanceof FormMessage) {
+
+			receiveFormeMessage(algo, m_rec, d.getNum());
+
+		} else {
+
+			if (m_rec instanceof ExtendRouteMessage) {
+
+				System.out.println("Receive message ExtendRouteMessage");
+
+			} else {
+
+				System.out.println("Error message");
+			}
+		}
+	}
+
+	/**
+	 * Function which allow managing receiving form for each instance of
+	 * LelannMutualExclusion,RicartAggrawalaMutualExclusion and
+	 * NaimiTreilMutualExclusion classes
+	 * 
+	 * @return void
+	 * @param instance
+	 *            of Algorithm class
+	 * @param instance
+	 *            of Message class
+	 * @param instance
+	 *            of Door class
+	 * 
+	 */
+	private void receiveFormeMessage(	final Algorithm algo,
+										final Message m_,
+										final int door) {
+
+		FormMessage m = (FormMessage) m_;
+		if (algo instanceof LelannMutualExclusion) {
+
+			LelannMutualExclusion lelan = (LelannMutualExclusion) algo;
 			switch (m.getMsgType()) {
 
 				case FORME :
 					lelan.receiveFormMessage(m);
 					break;
-	
+
 				default :
 					System.out.println("Error message type");
 			}
 		}
-		
-		else if(algo instanceof RicartAggrawalaMutualExclusion){
-			
-			RicartAggrawalaMutualExclusion ricart = (RicartAggrawalaMutualExclusion)algo;
+
+		else if (algo instanceof RicartAggrawalaMutualExclusion) {
+
+			RicartAggrawalaMutualExclusion ricart = (RicartAggrawalaMutualExclusion) algo;
 			switch (m.getMsgType()) {
 
 				case FORME :
 					ricart.receiveFormMessage(m);
 					break;
-	
+
 				default :
 					System.out.println("Error message type");
 			}
-			
-		}
-		else if( algo instanceof NaimiTreilMutualExclusion){
-			
-			NaimiTreilMutualExclusion naimi = (NaimiTreilMutualExclusion)algo;
+
+		} else if (algo instanceof NaimiTreilMutualExclusion) {
+
+			NaimiTreilMutualExclusion naimi = (NaimiTreilMutualExclusion) algo;
 			switch (m.getMsgType()) {
 
 				case FORME :
 					naimi.receiveFormMessage(m);
 					break;
-	
+
 				default :
 					System.out.println("Error message type");
 			}
 		}
 	}
-	
+
 }

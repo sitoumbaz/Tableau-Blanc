@@ -5,9 +5,6 @@ import Message.MsgType;
 
 public class ExtendRouteMessage extends Message {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	MsgType type;
 

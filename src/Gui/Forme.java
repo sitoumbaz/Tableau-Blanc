@@ -7,7 +7,7 @@ import java.awt.Point;
 import java.awt.Stroke;
 
 /**
- * La classe Forme définit le contrat d'une forme à dessiner.
+ * La classe Forme definit le contrat d'une forme a dessiner.
  * 
  * 
  */
@@ -20,11 +20,11 @@ public abstract class Forme {
 	protected Color bg;
 	/** L'avant plan. */
 	protected Color fg;
-	/** L'épaisseur du trait. */
+	/** L'��paisseur du trait. */
 	protected float trait;
 
 	/**
-	 * Méthode de dessin de l'arriere plan.
+	 * M��thode de dessin de l'arriere plan.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
@@ -32,7 +32,7 @@ public abstract class Forme {
 	public abstract void dessineArrierePlan(Graphics2D g);
 
 	/**
-	 * Méthode de dessin de l'avant plan.
+	 * M��thode de dessin de l'avant plan.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
@@ -40,10 +40,11 @@ public abstract class Forme {
 	public abstract void dessineAvantPlan(Graphics2D g);
 
 	/**
-	 * Retourne vrai si cette forme est définie par 2 points, faux pour un
+	 * Retourne vrai si cette forme est d��finie par 2 points, faux pour un
 	 * point.
 	 * 
-	 * @return vrai si cette forme est définie par 2 points, faux pour un point.
+	 * @return vrai si cette forme est d��finie par 2 points, faux pour un
+	 *         point.
 	 */
 	public abstract boolean aDeuxPoints();
 
@@ -55,21 +56,21 @@ public abstract class Forme {
 	 * @param fg
 	 *            L'avant plan.
 	 * @param trait
-	 *            L'épaisseur du trait.
+	 *            L'��paisseur du trait.
 	 */
-	public Forme(Color bg, Color fg, float trait) {
+	public Forme(final Color bg, final Color fg, final float trait) {
 		this.bg = bg;
 		this.fg = fg;
 		this.trait = trait;
 	}
 
 	/**
-	 * Méthode de dessin.
+	 * M��thode de dessin.
 	 * 
 	 * @param g
 	 *            Le contexte de le dessin.
 	 */
-	public void paint(Graphics2D g) {
+	public void paint(final Graphics2D g) {
 		// sauvegarde du trait.
 		Stroke sauveStroke = g.getStroke();
 		// application de notre trait.
@@ -91,22 +92,22 @@ public abstract class Forme {
 	}
 
 	/**
-	 * Définit le premier point de la forme.
+	 * D��finit le premier point de la forme.
 	 * 
 	 * @param p1
 	 *            Le premier point de la forme.
 	 */
-	public void setPoint1(Point p1) {
+	public void setPoint1(final Point p1) {
 		this.p1 = p1;
 	}
 
 	/**
-	 * Définit le second point de la forme.
+	 * D��finit le second point de la forme.
 	 * 
 	 * @param p2
 	 *            Le second point de la forme.
 	 */
-	public void setPoint2(Point p2) {
+	public void setPoint2(final Point p2) {
 		this.p2 = p2;
 	}
 }
