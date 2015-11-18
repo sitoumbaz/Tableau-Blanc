@@ -51,28 +51,33 @@ public class MessageListener extends Thread {
 	public void run() {
 
 		Door d = new Door();
-
-		while (true) {
+		
+		if(algo1 instanceof LelannMutualExclusion){
 			
-			if(algo1 instanceof LelannMutualExclusion){
-				
-				
+			while (true){
+			
 				listenLelanMessage(algo1, d);
 			}
 			
-			else if(algo2 instanceof RicartAggrawalaMutualExclusion){
-				
+		}
+		
+		else if(algo2 instanceof RicartAggrawalaMutualExclusion){
+			
+			while (true){
 				
 				listenRicartAggrawalaMessage(algo2, d);
 			}
+		}
+		
+		else if(algo3 instanceof NaimiTreilMutualExclusion){
 			
-			else if(algo3 instanceof NaimiTreilMutualExclusion){
-				
+			while (true){
 				
 				listenerNaimiTreilMessage(algo3, d);
 			}
 			
 		}
+	
 	}
 	
 	
@@ -154,6 +159,7 @@ public class MessageListener extends Thread {
 					
 					algo2.receiveRel(m);
 					
+					
 				break;
 	
 				default :
@@ -168,7 +174,18 @@ public class MessageListener extends Thread {
 			
 			if(m_rec instanceof ExtendRouteMessage ){
 				
-					System.out.println("Receive message ExtendRouteMessage");
+					
+					ExtendRouteMessage m = (ExtendRouteMessage)m_rec;
+					algo2.recoitExtendRouteMessage(m, d.getNum());
+					synchronized(algo2){
+						
+						if(algo2.myRouter.ready == algo2.netSize){
+							
+							algo2.iAmReady = true;
+							algo2.notify();
+						}
+						
+					}
 					
 			}else{
 				

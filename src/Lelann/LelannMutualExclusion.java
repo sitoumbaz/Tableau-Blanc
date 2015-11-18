@@ -455,7 +455,7 @@ public class LelannMutualExclusion extends Algorithm {
 	
 	private void writeRoute(){
 		
-		String str = "#### Route of Proc-" + procId + " ######\n";
+		String str = "#### \n\nRoute of Proc-" + procId + " ######\n";
 		for (int i = 0; i < getNetSize(); i++) {
 
 			str += "Door " + myRouter.getDoorOnMyRoute(i)+ " connected to procId-" + i + "\n";
