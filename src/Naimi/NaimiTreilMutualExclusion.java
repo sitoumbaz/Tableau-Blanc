@@ -204,7 +204,7 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	}
 	
 	/**
-	 * Rule 2 : receiv req send
+	 * Rule 2 : receive req
 	 * @return void 
 	 * @param instance of RulesMessage class
 	 * 
@@ -324,6 +324,10 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	public void recoitExtendRouteMessage(final Door d) {
 
 		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
+		
+		//Je recois les message TABLE, je mets a 
+		//jour la ou la valeur est -1 et j'incremente la variable complete
+		
 		if (m.getMsgType() == MsgType.TABLE) {
 
 			for (int i = 0; i < getNetSize(); i++) {
@@ -337,6 +341,10 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 			}
 		}
 
+		//Je recois les message READY, je mets a 
+	    //jour la ou la valeur est false et j'incremente la variable ready
+		//En oute les message READY viens aussi avec la derniere version de la table, 
+		//je mets à jour la ou la valeur est -1 et j'incremente la variable complete
 		if (m.getMsgType() == MsgType.READY) {
 
 			for (int i = 0; i < getNetSize(); i++) {

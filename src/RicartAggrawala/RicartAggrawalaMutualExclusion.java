@@ -53,7 +53,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	Integer Nrel; // Nombre des REL attendu
 	Integer V; //Nombre des voisins d'unprocessus 
 	public int procId = 0; // My processus Id
-	String logFile = null;
+	String logFile = null;//variable du nom de fichier
 	
 	// Tableau blanc
 	private Lanceur lanceur;
@@ -128,6 +128,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 				catch (InterruptedException ie) {
 					Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
 				}
+				//Routine de dessiner sur le tableau blanc
 				drawNewForm();
 			
 			}
@@ -156,6 +157,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
 		
+		//Ercire le routage dans le log
 		writeRoute();
 		try {
 			routing.join();
@@ -175,10 +177,13 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	
 	public void drawNewForm(){
 		
+		//generation aleatoire d'une forme
 		motTest.creerForme();
 		p1 = motTest.getPoint1();
 		p2 = motTest.getPoint2();
 		typeForm = motTest.getChoixForme();
+		
+		//Envoi des message REQ pour pour demander la section critique
 		for(int i=0; i<getNetSize(); i++){
 			if(i != procId){
 				
@@ -189,11 +194,18 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			}
 		}
 		Logger.write(logFile,"Proc-" + procId+ " : Create form, wait critical section  befor drawing");
+		
+		//Attent l'autorisation d acces a la section critique
 		askCriticalSection();
 		Logger.write(logFile,"Proc-" + procId + ":  Enter the Critical Section, draw form and publish");
+		
+		//Accede a la section critique, dessigne la forme sur le Tableau blanc
 		lanceur.ajouteForme(p1, p2, typeForm);
+		
+		//Envoi la forme dessinee a tous le monde
 		sendForm();
 		try {
+			Logger.write(logFile,"Proc-" + procId + ":  wait for simulating critical section ");
 			Thread.sleep(1000);
 		} catch (InterruptedException ie) {
 			Logger.write(logFile,"Proc-" + procId + " : Error" + ie.getMessage());
@@ -201,8 +213,6 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		endCriticalSection();
 		
 	}
-	
-
 	/**************************************** Rules of Ricart Agrawalla Algorithme **************************/
 	
 	/**
@@ -218,13 +228,11 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 		while(this.Nrel != 0){
 			
 			try {
-				System.out.println("procId-"+procId+" WAITING NREL = "+Nrel);
+				
 				this.wait();
-				System.out.println("procId-"+procId+" OUI HALLO NREL = "+Nrel);
+				
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
-		
-		System.out.println("procId-"+procId+" BYE BYE GET NOTIFY NREL = "+Nrel);
 		
 	}
 	
@@ -236,10 +244,14 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	 */
 	public synchronized void receiveReq(RulesMessage ms){
 		
+		//Recupere la porte du destinataire du message REQ
 		int door = myRouter.getDoorOnMyRoute(ms.procRecipient);
-		if(ms.procRecipient == procId){
+		
+		if(ms.procRecipient == procId){// Si le message REQ recu m'appartient
 						
+			//Recupere la porte du de l'expeditaire du message REQ
 			door = myRouter.getDoorOnMyRoute(ms.procId);
+			
 			H = Math.max(H, ms.H) + 1;
 			Logger.write(logFile,"Proc-"+procId+" Receive REQ of proc-"+ms.procId+" on door "+door+"");
 			if(R && ((HSC < ms.H) || ((HSC == ms.H) && procId < ms.procId))){
@@ -256,7 +268,7 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			}
 			
 		}
-		else{
+		else{// Le message REL recu ne m'appartient pas
 			
 			this.sendTo(door, ms);
 		}
@@ -272,18 +284,17 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	public  synchronized void receiveRel(final RulesMessage rm) {
 		
 		
-		if (rm.procRecipient == procId) {
+		if (rm.procRecipient == procId) {//Si le message REL m'est destinE
 		    
-			    System.out.println("procId-"+procId+" SEND NOTIFY NREL = "+Nrel);
-				this.Nrel--;
+			    this.Nrel--;
 				this.notify();
 
 		} 
-		else {
+		else {// Si le message REL ne m'est pas destiné
 			
-			next = this.myRouter.getDoorOnMyRoute(rm.procRecipient);
+			int door = this.myRouter.getDoorOnMyRoute(rm.procRecipient);
 			Logger.write(logFile,"proc-" + procId+":Receive REL, do not need it, I forward it to "+ rm.procRecipient + " on door " + next);
-			boolean sent = this.sendTo(next, rm);
+			boolean sent = this.sendTo(door, rm);
 		}
 	}
 
@@ -302,15 +313,16 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			return;
 		}
 		
-		for (int i = X.size()-1; i >= 0 ; i--) {
+		//Envoi REL a tous les message REQ recu differé
+		for (int proc : X) {
 			
-			int proc = X.get(i);
 			RulesMessage mrel = new RulesMessage(MsgType.REL, procId,proc,0);
 			int door = this.myRouter.getDoorOnMyRoute(proc);
 			sendTo(door, mrel);
 			Logger.write(logFile,"Proc-"+procId+" Send REL to "+mrel.procRecipient+" on door "+door);
 			
 		}
+		//Vide l'ensemble des processus differé
 		X.clear();
 		
 	}
@@ -361,11 +373,16 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 	public void recoitExtendRouteMessage(final Door d) {
 
 		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
+		
+		//Je recois les message TABLE, je mets a 
+		//jour la ou la valeur est -1 et j'incremente la variable complete
+		
 		if (m.getMsgType() == MsgType.TABLE) {
 
 			for (int i = 0; i < getNetSize(); i++) {
 
-				if (myRouter.getDoorOnMyRoute(i) == -1 & m.getRoutingTable()[i] > -1) {
+				if (myRouter.getDoorOnMyRoute(i) == -1
+						&& m.getRoutingTable()[i] > -1) {
 
 					myRouter.setDoorToMyRoute(i, d.getNum());
 					myRouter.complete++;
@@ -373,11 +390,16 @@ public class RicartAggrawalaMutualExclusion extends Algorithm {
 			}
 		}
 
+		//Je recois les message READY, je mets a 
+	    //jour la ou la valeur est false et j'incremente la variable ready
+		//En oute les message READY viens aussi avec la derniere version de la table, 
+		//je mets à jour la ou la valeur est -1 et j'incremente la variable complete
 		if (m.getMsgType() == MsgType.READY) {
 
 			for (int i = 0; i < getNetSize(); i++) {
 
-				if (myRouter.getDoorOnMyRoute(i) == -1 & m.getRoutingTable()[i] > -1) {
+				if (myRouter.getDoorOnMyRoute(i) == -1
+						&& m.getRoutingTable()[i] > -1) {
 
 					myRouter.setDoorToMyRoute(i, d.getNum());
 					myRouter.complete++;

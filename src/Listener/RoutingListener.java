@@ -215,6 +215,7 @@ public class RoutingListener extends Thread {
 	 */
 	private synchronized void listenerNaimiTreilRouting(NaimiTreilMutualExclusion algorithme, Door d){
 		
+		//Envoi message ROUTE a tous mes voisins
 		for (int i = 0; i < algorithme.arity; i++) {
 
 			RouteMessage mr = new RouteMessage(MsgType.ROUTE, algorithme.procId);
@@ -222,6 +223,7 @@ public class RoutingListener extends Thread {
 		}
 
 		int i = 0;
+		//Envoi je recois tous les messages ROUTE provenant de mes voisins
 		while (i < algorithme.arity) {
 
 			Door door = new Door();
@@ -243,6 +245,7 @@ public class RoutingListener extends Thread {
 			}
 
 			Door door = new Door();
+			// Je recois tous les messages TABLE ou READY des mes voisins
 			algorithme.recoitExtendRouteMessage(door);
 		}
 		myRouter.ProcBecomeReady(algorithme.procId, true);
