@@ -438,40 +438,53 @@ public class LelannMutualExclusion extends Algorithm {
 	 */
 	public void recoitExtendRouteMessage(final Door d) {
 
-		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
-		if (m.getMsgType() == MsgType.TABLE) {
+			ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
+			
+			//Je recois les message TABLE, je mets a 
+			//jour la ou la valeur est -1 et j'incremente la variable complete
+			
+			if (m.getMsgType() == MsgType.TABLE) {
 
-			for (int i = 0; i < getNetSize(); i++) {
+				for (int i = 0; i < getNetSize(); i++) {
 
-				if (myRouter.getDoorOnMyRoute(i) == -1
-						&& m.getRoutingTable()[i] > -1) {
+					if (myRouter.getDoorOnMyRoute(i) == -1
+							&& m.getRoutingTable()[i] > -1) {
 
-					myRouter.setDoorToMyRoute(i, d.getNum());
-					myRouter.complete++;
+						myRouter.setDoorToMyRoute(i, d.getNum());
+						myRouter.complete++;
+					}
+				}
+			}
+
+			//Je recois les message READY, je mets a 
+		    //jour la ou la valeur est false et j'incremente la variable ready
+			//En oute les message READY viens aussi avec la derniere version de la table, 
+			//je mets à jour la ou la valeur est -1 et j'incremente la variable complete
+			if (m.getMsgType() == MsgType.READY) {
+
+				for (int i = 0; i < getNetSize(); i++) {
+
+					if (myRouter.getDoorOnMyRoute(i) == -1
+							&& m.getRoutingTable()[i] > -1) {
+
+						myRouter.setDoorToMyRoute(i, d.getNum());
+						myRouter.complete++;
+					}
+				}
+				if (!myRouter.getStateOfProc(m.getMyProcId())) {
+
+					myRouter.ProcBecomeReady(m.getMyProcId(), true);
+					myRouter.ready++;
+					sendRouteMessage(m, d.getNum());
 				}
 			}
 		}
-
-		if (m.getMsgType() == MsgType.READY) {
-
-			for (int i = 0; i < getNetSize(); i++) {
-
-				if (myRouter.getDoorOnMyRoute(i) == -1
-						&& m.getRoutingTable()[i] > -1) {
-
-					myRouter.setDoorToMyRoute(i, d.getNum());
-					myRouter.complete++;
-				}
-			}
-			if (!myRouter.getStateOfProc(m.getMyProcId())) {
-
-				myRouter.ProcBecomeReady(m.getMyProcId(), true);
-				myRouter.ready++;
-				sendRouteMessage(m, d.getNum());
-			}
-		}
+<<<<<<< HEAD
 	}
 
+=======
+	
+>>>>>>> 4788f2f587deb0811291247c8f58f5b43a800787
 	/**
 	 * This function allow us to access to protected sendTo function outside of
 	 * the class
@@ -494,10 +507,17 @@ public class LelannMutualExclusion extends Algorithm {
 	 * @return void
 	 * 
 	 */
+<<<<<<< HEAD
 
 	private void writeRoute() {
 
 		String str = "#### Route of Proc-" + procId + " ######\n";
+=======
+	
+	private void writeRoute(){
+		
+		String str = "#### \n\nRoute of Proc-" + procId + " ######\n";
+>>>>>>> 4788f2f587deb0811291247c8f58f5b43a800787
 		for (int i = 0; i < getNetSize(); i++) {
 
 			str += "Door " + myRouter.getDoorOnMyRoute(i)

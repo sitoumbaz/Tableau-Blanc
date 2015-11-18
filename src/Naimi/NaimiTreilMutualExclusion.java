@@ -219,11 +219,17 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	}
 
 	/**
+<<<<<<< HEAD
 	 * Rule 2 : receiv req send
 	 * 
 	 * @return void
 	 * @param instance
 	 *            of RulesMessage class
+=======
+	 * Rule 2 : receive req
+	 * @return void 
+	 * @param instance of RulesMessage class
+>>>>>>> 4788f2f587deb0811291247c8f58f5b43a800787
 	 * 
 	 */
 	public synchronized void receiveReq(final RulesMessage m) {
@@ -351,6 +357,10 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	public void recoitExtendRouteMessage(final Door d) {
 
 		ExtendRouteMessage m = (ExtendRouteMessage) receive(d);
+		
+		//Je recois les message TABLE, je mets a 
+		//jour la ou la valeur est -1 et j'incremente la variable complete
+		
 		if (m.getMsgType() == MsgType.TABLE) {
 
 			for (int i = 0; i < getNetSize(); i++) {
@@ -364,6 +374,10 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 			}
 		}
 
+		//Je recois les message READY, je mets a 
+	    //jour la ou la valeur est false et j'incremente la variable ready
+		//En oute les message READY viens aussi avec la derniere version de la table, 
+		//je mets à jour la ou la valeur est -1 et j'incremente la variable complete
 		if (m.getMsgType() == MsgType.READY) {
 
 			for (int i = 0; i < getNetSize(); i++) {
@@ -459,9 +473,15 @@ public class NaimiTreilMutualExclusion extends Algorithm {
 	 * @return void
 	 * 
 	 */
+<<<<<<< HEAD
 	private void writeRoute() {
 
 		String str = "#### Route of Proc-" + procId + " ######\n";
+=======
+	private void writeRoute(){
+		
+		String str = "#### \n\nRoute of Proc-" + procId + " ######\n";
+>>>>>>> 4788f2f587deb0811291247c8f58f5b43a800787
 		for (int i = 0; i < getNetSize(); i++) {
 
 			str += "Door " + myRouter.getDoorOnMyRoute(i)
