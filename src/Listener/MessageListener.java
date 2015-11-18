@@ -22,7 +22,8 @@ public class MessageListener extends Thread {
 	NaimiTreilMutualExclusion algo3;
 
 	/**
-	 * Constructor
+	 * Constructeur, permet d'instancier le bon algorithme en fonction de son
+	 * instance
 	 * 
 	 * @return void
 	 * @param instance
@@ -54,6 +55,7 @@ public class MessageListener extends Thread {
 
 		Door d = new Door();
 
+		// on lance la bonne instance de listener en fonction de l algo
 		if (algo1 instanceof LelannMutualExclusion) {
 
 			while (true) {

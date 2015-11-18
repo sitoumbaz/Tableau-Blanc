@@ -29,14 +29,17 @@ public class MoteurTest {
 
 		java.util.Random rand = new java.util.Random();
 
+		// génere la forme
 		int choixForme = rand.nextInt((3) + 1);
 		setChoixForme(choixForme);
 
+		// génere le premier point
 		int p1x = rand.nextInt((max - min) + 1) + min;
 		int p1y = rand.nextInt((max - min) + 1) + min;
 		Point p1 = new Point(p1x, p1y);
 		setPoint1(p1);
 
+		// génere le deuxieme point
 		int p2x = rand.nextInt((p1x + min - p1x - min) + 1) + p1x - min;
 		int p2y = rand.nextInt((p1y + min - p1y - min) + 1) + p1y - min;
 		Point p2 = new Point(p2x, p2y);
