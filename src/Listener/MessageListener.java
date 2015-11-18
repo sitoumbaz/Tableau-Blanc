@@ -53,51 +53,33 @@ public class MessageListener extends Thread {
 	public void run() {
 
 		Door d = new Door();
-<<<<<<< HEAD
 
-		while (true) {
+		if (algo1 instanceof LelannMutualExclusion) {
 
-			if (algo1 instanceof LelannMutualExclusion) {
+			while (true) {
 
 				listenLelanMessage(algo1, d);
 			}
 
-			else if (algo2 instanceof RicartAggrawalaMutualExclusion) {
+		}
+
+		else if (algo2 instanceof RicartAggrawalaMutualExclusion) {
+
+			while (true) {
 
 				listenRicartAggrawalaMessage(algo2, d);
 			}
-
-			else if (algo3 instanceof NaimiTreilMutualExclusion) {
-
-=======
-		
-		if(algo1 instanceof LelannMutualExclusion){
-			
-			while (true){
-			
-				listenLelanMessage(algo1, d);
-			}
-			
 		}
-		
-		else if(algo2 instanceof RicartAggrawalaMutualExclusion){
-			
-			while (true){
-				
-				listenRicartAggrawalaMessage(algo2, d);
-			}
-		}
-		
-		else if(algo3 instanceof NaimiTreilMutualExclusion){
-			
-			while (true){
-				
->>>>>>> 4788f2f587deb0811291247c8f58f5b43a800787
+
+		else if (algo3 instanceof NaimiTreilMutualExclusion) {
+
+			while (true) {
+
 				listenerNaimiTreilMessage(algo3, d);
 			}
 
 		}
-	
+
 	}
 
 	/**
@@ -181,7 +163,6 @@ public class MessageListener extends Thread {
 				case REL :
 
 					algo2.receiveRel(m);
-<<<<<<< HEAD
 
 					break;
 
@@ -196,48 +177,24 @@ public class MessageListener extends Thread {
 
 			if (m_rec instanceof ExtendRouteMessage) {
 
-				System.out.println("Receive message ExtendRouteMessage");
+				ExtendRouteMessage m = (ExtendRouteMessage) m_rec;
+				algo2.recoitExtendRouteMessage(m, d.getNum());
+				synchronized (algo2) {
+
+					if (algo2.myRouter.ready == algo2.netSize) {
+
+						algo2.iAmReady = true;
+						algo2.notify();
+					}
+
+				}
 
 			} else {
 
-=======
-					
-					
-				break;
-	
-				default :
-					System.out.println("Error message type");
-			}
-		}
-		else if(m_rec instanceof FormMessage){
-			
-			receiveFormeMessage(algo, m_rec,d.getNum());
-			
-		}else{
-			
-			if(m_rec instanceof ExtendRouteMessage ){
-				
-					
-					ExtendRouteMessage m = (ExtendRouteMessage)m_rec;
-					algo2.recoitExtendRouteMessage(m, d.getNum());
-					synchronized(algo2){
-						
-						if(algo2.myRouter.ready == algo2.netSize){
-							
-							algo2.iAmReady = true;
-							algo2.notify();
-						}
-						
-					}
-					
-			}else{
-				
->>>>>>> 4788f2f587deb0811291247c8f58f5b43a800787
 				System.out.println("Error message");
 			}
 		}
 	}
-
 	/**
 	 * Function which allow managing Message Rules of the Lelan Algorithm
 	 * 
